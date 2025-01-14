@@ -8,6 +8,15 @@ export const getRoomsList = async (req: Request, res: Response) =>
     try {
         const input = {
             "TableName":"sample-data",
+            "ExpressionAttributeNames": {
+                "#P": "Private"
+            },
+            "ExpressionAttributeValues": {
+                ":b": {
+                  "BOOL": false
+                }
+            },
+            "FilterExpression": "#P = :b",
             "ProjectionExpression":"RoomId, RoomName, HostName, CurrentCount, MaxPlayers"
         };
 
