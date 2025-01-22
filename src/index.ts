@@ -5,6 +5,8 @@ import roomsRouter from "./routes/rooms";
 import "reflect-metadata";
 const cors = require('cors');
 
+dotenv.config();
+
 const PORT = 3000;
 const app: Application = express();
 
