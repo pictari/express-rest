@@ -16,7 +16,10 @@
     "@aws-sdk/lib-dynamodb": "^3.726.1",
     "cors": "^2.8.5",
     "express": "^4.21.2",
-    "morgan": "^1.10.0"
+    "morgan": "^1.10.0",
+    "mysql2": "^3.12.0",
+    "reflect-metadata": "^0.2.2",
+    "typeorm": "^0.3.20"
   },
   "devDependencies": {
     "@aws-sdk/types": "^3.714.0",
