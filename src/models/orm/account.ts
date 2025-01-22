@@ -5,6 +5,12 @@ export class Account {
     @PrimaryColumn("uuid")
     uuid!: string
 
+    @Column({
+        type: "tinyint",
+        unsigned: true
+    })
+    userType!: UserType
+
     @Column("char", { length: 16 })
     name!: string
 
@@ -20,4 +26,10 @@ export class Account {
 
     @Column("boolean")
     verified!: boolean
+}
+
+export enum UserType {
+    admin,
+    moderator,
+    none
 }
