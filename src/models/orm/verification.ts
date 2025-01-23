@@ -3,11 +3,11 @@ import { Entity, Column, PrimaryColumn } from "typeorm"
 @Entity()
 export class Verification {
     @PrimaryColumn("uuid")
-    uuid!: string
+    uuid!: string | null;
 
     @Column("text")
-    address!: string
+    address!: string | null;
 
     @Column("timestamp")
-    timeGenerated!: Date
+    timeGenerated!: Date | null;
 }

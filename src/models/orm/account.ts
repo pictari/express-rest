@@ -3,29 +3,29 @@ import { Entity, Column, PrimaryColumn } from "typeorm"
 @Entity()
 export class Account {
     @PrimaryColumn("uuid")
-    uuid?: string
+    uuid!: string | null;
 
     @Column({
         type: "tinyint",
         unsigned: true
     })
-    userType?: UserType
+    userType!: UserType | null;
 
     @Column("char", { length: 16 })
-    name?: string
+    name!: string | null;
 
     @Column("tinytext")
-    about?: string
+    about!: string | null;
 
     // fun fact: maximum length of email is 320 characters
     @Column("text")
-    email?: string
+    email!: string | null;
 
     @Column("text")
-    password?: string
+    password!: string | null;
 
     @Column("boolean")
-    verified?: boolean
+    verified!: boolean | null;
 }
 
 export enum UserType {
