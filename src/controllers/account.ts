@@ -105,6 +105,34 @@ export const getAccountFriends = async (req: Request, res: Response) => {
 }
 
 // use case is profile page (only for the owner)
+export const getAccountPendingFriendships = async (req: Request, res: Response) => {
+    let requestedUuid = req.params.uuid;
+
+    // while requests are unidirectional, a person may want to see the
+    // pending requests that THEY sent, as well as those that are sent TO them
+
+    // account owner's UUID in the first col = request was sent BY them
+    // account owner's UUID in the second col = request was sent TO them
+    let friends = await friendshipRepo.find({
+        select: {
+            accountUuid: true,
+            account2Uuid: true
+        },
+        where: [
+            {accountUuid: requestedUuid},
+            {account2Uuid: requestedUuid}
+        ]
+    }
+);
+
+    if(friends.length == 0) {
+        res.status(404).send(`Cannot find an account with that UUID OR that account has no unresolved requests.`);
+    } else {
+        res.status(200).json(friends);
+    }
+}
+
+// use case is profile page (only for the owner)
 export const getAccountBlockedList = async (req: Request, res: Response) => {
     let requestedUuid = req.params.uuid;
 

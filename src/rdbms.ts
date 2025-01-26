@@ -1,7 +1,9 @@
 import { DataSource } from "typeorm"
 import { Account } from "./models/orm/account"
 import { Verification } from "./models/orm/verification"
-import { Relationship } from "./models/orm/friendship";
+import { Friendship } from "./models/orm/friendship";
+import { Block } from "./models/orm/block";
+import { PendingFriendship } from "./models/orm/pending_friendship";
 
 export const AccountDataSource = new DataSource({
     type: "mariadb",
@@ -10,7 +12,7 @@ export const AccountDataSource = new DataSource({
     username: process.env.dbusername,
     password: process.env.dbpassword,
     database: process.env.db,
-    entities: [Account, Verification, Relationship],
+    entities: [Account, Verification, Friendship, Block, PendingFriendship],
     synchronize: true,
     logging: false,
 });
