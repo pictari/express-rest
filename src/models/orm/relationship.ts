@@ -1,6 +1,7 @@
-import { Entity, Column, PrimaryColumn, OneToOne, JoinColumn, ManyToOne } from "typeorm";
+import { Entity, Column, PrimaryColumn, OneToOne, JoinColumn, ManyToOne, Unique } from "typeorm";
 import { Account } from "./account";
 
+@Unique("relationship_constraint", ["accountUuid, account2Uuid"])
 @Entity()
 export class Relationship {
     @PrimaryColumn({

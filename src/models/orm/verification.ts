@@ -8,7 +8,8 @@ export class Verification {
     // ???
     @PrimaryColumn({
         type: "uuid",
-        nullable: false
+        nullable: false,
+        unique: true
     })
     accountUuid!: string | null;
 

@@ -7,7 +7,8 @@ import { Entity, Column, PrimaryColumn } from "typeorm";
 export class Account {
     @PrimaryColumn({
         type: "uuid",
-        nullable: false
+        nullable: false,
+        unique: true
     })
     uuid!: string | null;
 
