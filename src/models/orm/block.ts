@@ -1,9 +1,13 @@
-import { Entity, Column, PrimaryColumn, OneToOne, JoinColumn, ManyToOne, Unique } from "typeorm";
+import { Entity, PrimaryColumn, JoinColumn, ManyToOne, Unique } from "typeorm";
 import { Account } from "./account";
 
-@Unique("relationship_constraint", ["accountUuid, account2Uuid"])
+// identical to Friendship table but denormalized for sake of read
+// performance
+
+// this is a unidirectional relationship so instigator is in the first col
+@Unique("block_constraint", ["accountUuid, account2Uuid"])
 @Entity()
-export class Relationship {
+export class Block {
     @PrimaryColumn({
         type: "uuid",
         nullable: false
@@ -23,16 +27,4 @@ export class Relationship {
     @ManyToOne(() => Account, {cascade: true})
     @JoinColumn()
     account2!: Account | null;
-
-    @Column({
-        type: "tinyint",
-        unsigned: true,
-        nullable: true
-    })
-    relationshipType!: RelationshipType | null;
-}
-
-export enum RelationshipType {
-    friend,
-    blocked
 }

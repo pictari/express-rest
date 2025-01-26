@@ -1,7 +1,7 @@
 import { DataSource } from "typeorm"
 import { Account } from "./models/orm/account"
 import { Verification } from "./models/orm/verification"
-import { Relationship } from "./models/orm/relationship";
+import { Relationship } from "./models/orm/friendship";
 
 export const AccountDataSource = new DataSource({
     type: "mariadb",
