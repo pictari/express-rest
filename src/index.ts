@@ -14,7 +14,7 @@ app.use(cors());
 app.use(morgan("tiny"));
 app.use(express.json());
 
-app.use('/rooms', roomsRouter)
+app.use('/rooms', roomsRouter);
 
 var server = app.listen(PORT, function () {
     console.log("Listening on port: " + PORT)
