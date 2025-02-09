@@ -170,12 +170,14 @@ export const postNewFriendRequest  = async (req: Request, res: Response) => {
 
     if(verifyExistence == null) {
         res.status(404).send(`The requester UUID doesn't exist.`);
+        return;
     } 
     // does the requested UUID even exist?
     let verifyExistence2 = await accountRepo.findOneBy({ uuid: requestedUuid})
 
     if(verifyExistence2 == null) {
         res.status(404).send(`The requested UUID doesn't exist.`);
+        return;
     }
 
     // check that the friendship doesn't already exist
@@ -185,6 +187,7 @@ export const postNewFriendRequest  = async (req: Request, res: Response) => {
 
     if(friends != null) {
         res.status(400).send(`This friendship already exists.`);
+        return;
     }
 
     // check that the request doesn't exist already
@@ -204,6 +207,7 @@ export const postNewFriendRequest  = async (req: Request, res: Response) => {
 
     if(requests.length != 0) {
         res.status(400).send(`A request for this friendship already exists.`);
+        return;
     }
 
     const pendingRequest = new PendingFriendship();
@@ -212,6 +216,7 @@ export const postNewFriendRequest  = async (req: Request, res: Response) => {
     
     await AccountDataSource.manager.save(pendingRequest);
     res.status(201).send(`Created a friendship request.`);
+    return;
 }
 
 // self explanatory
@@ -226,12 +231,14 @@ export const postNewBlock  = async (req: Request, res: Response) => {
 
     if(verifyExistence == null) {
         res.status(404).send(`The requester UUID doesn't exist.`);
+        return;
     } 
     // does the requested UUID even exist?
     let verifyExistence2 = await accountRepo.findOneBy({ uuid: requestedUuid})
 
     if(verifyExistence2 == null) {
         res.status(404).send(`The requested UUID doesn't exist.`);
+        return;
     }
 
 
@@ -240,6 +247,7 @@ export const postNewBlock  = async (req: Request, res: Response) => {
 
     if(blocked != null) {
         res.status(400).send(`This account was already blocked.`);
+        return;
     }
 
     deleteFriendship(requesterUuid, requestedUuid);
@@ -247,6 +255,57 @@ export const postNewBlock  = async (req: Request, res: Response) => {
     const newBlock = new Block();
     newBlock.account == verifyExistence;
     newBlock.account2 == verifyExistence2;
+}
+
+// there is no better HTTP verb than POST for accepting friend requests
+export const postAcceptRequest  = async (req: Request, res: Response) => {
+    let requesterUuid = req.params.uuid;
+    let requestedUuid = req.params.uuid2;
+
+    // does the requester UUID even exist?
+    // these checks also double in function as fetching the needed accounts to
+    // create a request
+    let verifyExistence = await accountRepo.findOneBy({ uuid: requesterUuid})
+
+    if(verifyExistence == null) {
+        res.status(404).send(`The requester UUID doesn't exist.`);
+        return;
+    } 
+    // does the requested UUID even exist?
+    let verifyExistence2 = await accountRepo.findOneBy({ uuid: requestedUuid})
+
+    if(verifyExistence2 == null) {
+        res.status(404).send(`The requested UUID doesn't exist.`);
+        return;
+    }
+
+    // check that the request exists
+    let requests = await pendingRepo.find({
+        select: {
+            accountUuid: true,
+            account2Uuid: true
+        },
+        where: {
+            accountUuid: requestedUuid,
+            account2Uuid: requesterUuid
+        }
+    });
+
+    if(requests.length == 0) {
+        res.status(404).send(`There is no such request for a friendship.`);
+        return;
+    }
+
+    await AccountDataSource.manager.remove(requests[0]);
+
+    let toSort = [requesterUuid, requestedUuid];
+    toSort.sort();
+    const friendship = new Friendship();
+    friendship.accountUuid == toSort[0];
+    friendship.account2Uuid == toSort[1];
+    
+    await AccountDataSource.manager.save(friendship);
+    res.status(201).send(`Created a friendship request.`);
 }
 
 async function deleteFriendship(uuid1: string, uuid2: string) {

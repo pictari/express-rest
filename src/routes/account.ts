@@ -1,5 +1,5 @@
 import express, {Router} from 'express';
-import { getAccountBlockedList, getAccountFriends, getAccountPendingFriendships, getPersonalAccountInfo, getPublicAccountShortened, getPublicAccountStatistics, postNewBlock, postNewFriendRequest } from '../controllers/account';
+import { getAccountBlockedList, getAccountFriends, getAccountPendingFriendships, getPersonalAccountInfo, getPublicAccountShortened, getPublicAccountStatistics, postAcceptRequest, postNewBlock, postNewFriendRequest } from '../controllers/account';
 
 const router: Router = express.Router();
 
@@ -15,7 +15,7 @@ router.get('/:uuid/blocks', getAccountBlockedList);
 
 router.post('/:uuid/friends/:uuid2', postNewFriendRequest);
 router.post('/:uuid/blocks/:uuid2', postNewBlock);
-//router.post('/:uuid/friends/:uuid2/pending', endpointForAcceptingRequests);
+router.post('/:uuid/friends/:uuid2/pending', postAcceptRequest);
 
 //router.put('/:uuid/profile/settings', endpointForChangingSettings);
 
