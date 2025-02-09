@@ -263,8 +263,6 @@ export const postAcceptRequest  = async (req: Request, res: Response) => {
     let requestedUuid = req.params.uuid2;
 
     // does the requester UUID even exist?
-    // these checks also double in function as fetching the needed accounts to
-    // create a request
     let verifyExistence = await accountRepo.findOneBy({ uuid: requesterUuid})
 
     if(verifyExistence == null) {
@@ -305,7 +303,49 @@ export const postAcceptRequest  = async (req: Request, res: Response) => {
     friendship.account2Uuid == toSort[1];
     
     await AccountDataSource.manager.save(friendship);
-    res.status(201).send(`Created a friendship request.`);
+    res.status(201).send(`Created a friendship.`);
+}
+
+// effectively declines the incoming request
+export const deleteRequest  = async (req: Request, res: Response) => {
+    let requesterUuid = req.params.uuid;
+    let requestedUuid = req.params.uuid2;
+
+    // does the requester UUID even exist?
+    let verifyExistence = await accountRepo.findOneBy({ uuid: requesterUuid})
+
+    if(verifyExistence == null) {
+        res.status(404).send(`The requester UUID doesn't exist.`);
+        return;
+    } 
+    // does the requested UUID even exist?
+    let verifyExistence2 = await accountRepo.findOneBy({ uuid: requestedUuid})
+
+    if(verifyExistence2 == null) {
+        res.status(404).send(`The requested UUID doesn't exist.`);
+        return;
+    }
+
+    // check that the request exists
+    let requests = await pendingRepo.find({
+        select: {
+            accountUuid: true,
+            account2Uuid: true
+        },
+        where: {
+            accountUuid: requestedUuid,
+            account2Uuid: requesterUuid
+        }
+    });
+
+    if(requests.length == 0) {
+        res.status(404).send(`There is no such request for a friendship.`);
+        return;
+    }
+
+    await AccountDataSource.manager.remove(requests[0]);
+
+    res.status(204).send(`Rejected the friendship request.`);
 }
 
 async function deleteFriendship(uuid1: string, uuid2: string) {
