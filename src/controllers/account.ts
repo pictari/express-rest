@@ -420,3 +420,35 @@ export const deleteFriend  = async (req: Request, res: Response) => {
 
     res.status(204).send(`Deleted the friendship.`);
 }
+
+// deletes the two way relationship
+export const deleteBlock  = async (req: Request, res: Response) => {
+    let requesterUuid = req.params.uuid;
+    let requestedUuid = req.params.uuid2;
+
+    // does the requester UUID even exist?
+    let verifyExistence = await accountRepo.findOneBy({ uuid: requesterUuid})
+
+    if(verifyExistence == null) {
+        res.status(404).send(`The requester UUID doesn't exist.`);
+        return;
+    } 
+    // does the requested UUID even exist?
+    let verifyExistence2 = await accountRepo.findOneBy({ uuid: requestedUuid})
+
+    if(verifyExistence2 == null) {
+        res.status(404).send(`The requested UUID doesn't exist.`);
+        return;
+    }
+
+    let block = await blockRepo.findOneBy({ accountUuid:requesterUuid, account2Uuid:requestedUuid});
+
+    if(block == null) {
+        res.status(404).send(`No such block exists.`);
+        return;
+    }
+
+    await AccountDataSource.manager.remove(block);
+
+    res.status(204).send(`Removed the block.`);
+}
