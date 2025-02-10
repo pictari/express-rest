@@ -250,11 +250,50 @@ export const postNewBlock  = async (req: Request, res: Response) => {
         return;
     }
 
-    deleteFriendship(requesterUuid, requestedUuid);
-
     const newBlock = new Block();
     newBlock.account == verifyExistence;
     newBlock.account2 == verifyExistence2;
+
+    // remove any friendship between the two people
+    let toSort = [requesterUuid, requestedUuid];
+    toSort.sort();
+    let friends = await friendshipRepo.findOneBy({ accountUuid:toSort[0], account2Uuid:toSort[1]});
+
+    if(friends != null) {
+        await AccountDataSource
+        .createQueryBuilder()
+        .delete()
+        .from(Friendship)
+        .where("accountUuid = :id, account2Uuid = :id2", { id: toSort[0], id2: toSort[1] })
+        .execute().then((value) => {
+            console.log(value);
+        });
+    }
+
+    // remove any pending friendship requests from either person
+    let possibleRequest = await pendingRepo.findOneBy({accountUuid:requesterUuid});
+    if(possibleRequest != null) {
+        await AccountDataSource
+        .createQueryBuilder()
+        .delete()
+        .from(PendingFriendship)
+        .where("accountUuid = :id, account2Uuid = :id2", { id: requesterUuid, id2: requestedUuid })
+        .execute().then((value) => {
+            console.log(value);
+        });
+    }
+
+    let possibleRequest2 = await pendingRepo.findOneBy({accountUuid:requestedUuid});
+    if(possibleRequest2 != null) {
+        await AccountDataSource
+        .createQueryBuilder()
+        .delete()
+        .from(PendingFriendship)
+        .where("accountUuid = :id, account2Uuid = :id2", { id: requestedUuid, id2: requesterUuid })
+        .execute().then((value) => {
+            console.log(value);
+        });
+    }
 }
 
 // there is no better HTTP verb than POST for accepting friend requests
@@ -348,23 +387,36 @@ export const deleteRequest  = async (req: Request, res: Response) => {
     res.status(204).send(`Rejected the friendship request.`);
 }
 
-async function deleteFriendship(uuid1: string, uuid2: string) {
-        let toSort = [uuid1, uuid2];
-        toSort.sort();
-        let friends = await friendshipRepo.findOneBy({ accountUuid:toSort[0], account2Uuid:toSort[1]});
-    
-        if(friends == null) {
-            return false;
-        }
+// deletes the two way relationship
+export const deleteFriend  = async (req: Request, res: Response) => {
+    let requesterUuid = req.params.uuid;
+    let requestedUuid = req.params.uuid2;
 
-        await AccountDataSource
-            .createQueryBuilder()
-            .delete()
-            .from(Friendship)
-            .where("accountUuid = :id, account2Uuid = :id2", { id: toSort[0], id2: toSort[1] })
-            .execute().then((value) => {
-                console.log(value);
-            });
-        
-        return true;
+    // does the requester UUID even exist?
+    let verifyExistence = await accountRepo.findOneBy({ uuid: requesterUuid})
+
+    if(verifyExistence == null) {
+        res.status(404).send(`The requester UUID doesn't exist.`);
+        return;
+    } 
+    // does the requested UUID even exist?
+    let verifyExistence2 = await accountRepo.findOneBy({ uuid: requestedUuid})
+
+    if(verifyExistence2 == null) {
+        res.status(404).send(`The requested UUID doesn't exist.`);
+        return;
+    }
+
+    let toSort = [requesterUuid, requestedUuid];
+    toSort.sort();
+    let friends = await friendshipRepo.findOneBy({ accountUuid:toSort[0], account2Uuid:toSort[1]});
+
+    if(friends == null) {
+        res.status(404).send(`No such friendship exists`);
+        return;
+    }
+
+    await AccountDataSource.manager.remove(friends);
+
+    res.status(204).send(`Deleted the friendship.`);
 }
