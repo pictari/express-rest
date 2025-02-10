@@ -210,6 +210,22 @@ export const postNewFriendRequest  = async (req: Request, res: Response) => {
         return;
     }
 
+    // check for blocks, since blocked players (on either side) can't send
+    // requests to each other
+    let blocked = await blockRepo.findOneBy({accountUuid: requesterUuid});
+
+    if(blocked != null) {
+        res.status(400).send(`A block exists between the two accounts.`);
+        return;
+    }
+
+    let blocked2 = await blockRepo.findOneBy({accountUuid: requestedUuid});
+
+    if(blocked2 != null) {
+        res.status(400).send(`A block exists between the two accounts.`);
+        return;
+    }
+
     const pendingRequest = new PendingFriendship();
     pendingRequest.account == verifyExistence;
     pendingRequest.account2 == verifyExistence2;
