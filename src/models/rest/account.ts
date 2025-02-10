@@ -13,7 +13,7 @@ export const ValidateAccountPost = (account: Account) => {
         name: Joi.string().min(3).max(16).required(),
         password: Joi.string().required()
     });
-    validator.validate(account);
+    return validator.validate(account);
 }
 
 export const ValidateAccountPut = (account: Account) => {
@@ -23,5 +23,5 @@ export const ValidateAccountPut = (account: Account) => {
         about: Joi.string().max(255).optional(),
         password: Joi.string().optional()
     });
-    validator.validate(account);
+    return validator.validate(account);
 }

@@ -5,7 +5,9 @@ import { Verification } from "../models/orm/verification";
 import { Friendship } from "../models/orm/friendship";
 import { Block } from "../models/orm/block";
 import { PendingFriendship } from "../models/orm/pending_friendship";
-import { UUID } from "crypto";
+import Joi from "joi";
+import { ValidateAccountPut } from "../models/rest/account";
+import argon2 from "argon2";
 
 const accountRepo = AccountDataSource.getRepository(Account);
 const verificationRepo = AccountDataSource.getRepository(Verification);
@@ -318,14 +320,14 @@ export const postAcceptRequest  = async (req: Request, res: Response) => {
     let requestedUuid = req.params.uuid2;
 
     // does the requester UUID even exist?
-    let verifyExistence = await accountRepo.findOneBy({ uuid: requesterUuid})
+    let verifyExistence = await accountRepo.findOneBy({ uuid: requesterUuid});
 
     if(verifyExistence == null) {
         res.status(404).send(`The requester UUID doesn't exist.`);
         return;
     } 
     // does the requested UUID even exist?
-    let verifyExistence2 = await accountRepo.findOneBy({ uuid: requestedUuid})
+    let verifyExistence2 = await accountRepo.findOneBy({ uuid: requestedUuid});
 
     if(verifyExistence2 == null) {
         res.status(404).send(`The requested UUID doesn't exist.`);
@@ -359,6 +361,61 @@ export const postAcceptRequest  = async (req: Request, res: Response) => {
     
     await AccountDataSource.manager.save(friendship);
     res.status(201).send(`Created a friendship.`);
+}
+
+// change settings for account
+// complete email checks when the account create route is done
+export const putNewAccountSettings = async (req: Request, res: Response) => {
+    try {
+        let newSettings = req.body;
+
+        let validationResult : Joi.ValidationResult = ValidateAccountPut(newSettings);
+
+        if (validationResult.error) {
+            res.status(400).json(validationResult.error);
+            return;
+        }
+
+        let requesterUuid = req.params.uuid;
+
+        // does the requester UUID even exist?
+        let requestingAccount = await accountRepo.findOneBy({ uuid: requesterUuid});
+
+        if(requestingAccount == null) {
+            res.status(404).send(`The requester UUID doesn't exist.`);
+            return;
+        } 
+
+        let about = req.body.about;
+        if(about != undefined && about != null) {
+            requestingAccount.about == about;
+        }
+
+        let name = req.body.name;
+        if(name != undefined && name != null) {
+            requestingAccount.name == name;
+        }
+
+        let password = req.body.password;
+        if(password != undefined && password != null) {
+            requestingAccount.password = await argon2.hash(password);
+        }
+
+        let email = req.body.email;
+        if(email != undefined && email != null) {
+            requestingAccount.email == email;
+        }
+        
+        await accountRepo.save(requestingAccount);
+    } catch(error) {
+        if (error instanceof Error) {
+            console.log(`Problem updating account settings: ${error.message}`);
+        }
+        else {
+            console.log(`Error: ${error}`);
+        }
+        res.status(400).send(`Unable to update account settings.`);
+    }
 }
 
 // effectively declines the incoming request

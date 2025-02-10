@@ -1,5 +1,5 @@
 import express, {Router} from 'express';
-import { deleteBlock, deleteFriend, deleteRequest, getAccountBlockedList, getAccountFriends, getAccountPendingFriendships, getPersonalAccountInfo, getPublicAccountShortened, getPublicAccountStatistics, postAcceptRequest, postNewBlock, postNewFriendRequest } from '../controllers/account';
+import { deleteBlock, deleteFriend, deleteRequest, getAccountBlockedList, getAccountFriends, getAccountPendingFriendships, getPersonalAccountInfo, getPublicAccountShortened, getPublicAccountStatistics, postAcceptRequest, postNewBlock, postNewFriendRequest, putNewAccountSettings } from '../controllers/account';
 
 const router: Router = express.Router();
 
@@ -17,7 +17,7 @@ router.post('/:uuid/friends/:uuid2', postNewFriendRequest);
 router.post('/:uuid/blocks/:uuid2', postNewBlock);
 router.post('/:uuid/friends/:uuid2/pending', postAcceptRequest);
 
-//router.put('/:uuid/profile/settings', endpointForChangingSettings);
+router.put('/:uuid/profile/settings', putNewAccountSettings);
 
 router.delete('/:uuid/friends/:uuid2', deleteFriend);
 router.delete('/:uuid/blocks/:uuid2', deleteBlock);
