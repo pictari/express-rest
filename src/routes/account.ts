@@ -1,5 +1,5 @@
 import express, {Router} from 'express';
-import { deleteBlock, deleteFriend, deleteRequest, getAccountBlockedList, getAccountFriends, getAccountPendingFriendships, getPersonalAccountInfo, getPublicAccountShortened, getPublicAccountStatistics, postAcceptRequest, postNewBlock, postNewFriendRequest, putNewAccountSettings } from '../controllers/account';
+import { deleteBlock, deleteFriend, deleteRequest, getAccountBlockedList, getAccountFriends, getAccountPendingFriendships, getPersonalAccountInfo, getPublicAccountShortened, getPublicAccountStatistics, postAcceptRequest, postNewAccount, postNewBlock, postNewFriendRequest, putNewAccountSettings } from '../controllers/account';
 
 const router: Router = express.Router();
 
@@ -11,7 +11,7 @@ router.get('/:uuid/friends/pending', getAccountPendingFriendships);
 router.get('/:uuid/blocks', getAccountBlockedList);
 
 // change to auth route later
-//router.post('/', endpointForNewAccount);
+router.post('/', postNewAccount);
 
 router.post('/:uuid/friends/:uuid2', postNewFriendRequest);
 router.post('/:uuid/blocks/:uuid2', postNewBlock);

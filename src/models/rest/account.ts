@@ -4,7 +4,8 @@ export interface Account {
     email?:string,
     name?:string,
     about?:string,
-    password?:string
+    password?:string,
+    userType?:number
 }
 
 export const ValidateAccountPost = (account: Account) => {

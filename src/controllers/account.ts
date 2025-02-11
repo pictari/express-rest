@@ -1,19 +1,23 @@
 import { Request, Response } from "express";
 import { AccountDataSource } from "../rdbms";
-import { Account } from "../models/orm/account";
+import { Account, UserType } from "../models/orm/account";
 import { Verification } from "../models/orm/verification";
 import { Friendship } from "../models/orm/friendship";
 import { Block } from "../models/orm/block";
 import { PendingFriendship } from "../models/orm/pending_friendship";
-import Joi from "joi";
-import { ValidateAccountPut } from "../models/rest/account";
+import Joi, { date } from "joi";
+import { ValidateAccountPost, ValidateAccountPut } from "../models/rest/account";
 import argon2 from "argon2";
+import { v4 } from "uuid";
 
 const accountRepo = AccountDataSource.getRepository(Account);
 const verificationRepo = AccountDataSource.getRepository(Verification);
 const friendshipRepo = AccountDataSource.getRepository(Friendship);
 const pendingRepo = AccountDataSource.getRepository(PendingFriendship);
 const blockRepo = AccountDataSource.getRepository(Block);
+
+// used for verification links
+const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_";
 
 // use case is profile page
 export const getPublicAccountStatistics = async (req: Request, res: Response) =>
@@ -160,6 +164,63 @@ export const getAccountBlockedList = async (req: Request, res: Response) => {
     }
 }
 
+// 
+export const postNewAccount = async (req: Request, res: Response) => { 
+    try {
+        let accountToCreate = req.body;
+
+        let validationResult : Joi.ValidationResult = ValidateAccountPost(accountToCreate);
+
+        if (validationResult.error) {
+            res.status(400).json(validationResult.error);
+            return;
+        }
+
+        
+        let emailExists = await accountRepo.findOneBy({ email: accountToCreate.email});
+        if(emailExists != null) {
+            res.status(400).send(`This email is already in use.`);
+        }
+
+        let account : Account = new Account();
+        let verification : Verification = new Verification();
+
+        // theoretically, UUID will never conflict
+        let newUuid = v4();
+
+        account.uuid = newUuid;
+
+        account.name = accountToCreate.name;
+        account.password = await argon2.hash(accountToCreate.password);
+        account.verified = false;
+        account.userType = UserType.none;
+        account.dateGenerated = new Date();
+        account.gamesPlayed = 0;
+        account.totalFriends = 0;
+        account.totalRating = 0;
+        account.verified = false;
+        account.email = accountToCreate.email;
+        
+        await accountRepo.create(account);
+
+        verification.accountUuid = newUuid;
+        verification.timeGenerated = new Date();
+        verification.address = randomStringCreator(32);
+
+        await verificationRepo.create(verification);
+
+        res.status(201).send(`Registration succeeded. Please verify your email.`);
+    } catch(error) {
+        if (error instanceof Error) {
+            console.log(`Issue creating new account: ${error.message}`);
+        }
+        else {
+            console.log(`Error: ${error}`);
+        }
+        res.status(400).send(`Couldn't create new account.`);
+    }
+}
+
 // self explanatory
 export const postNewFriendRequest  = async (req: Request, res: Response) => {
     let requesterUuid = req.params.uuid;
@@ -168,7 +229,7 @@ export const postNewFriendRequest  = async (req: Request, res: Response) => {
     // does the requester UUID even exist?
     // these checks also double in function as fetching the needed accounts to
     // create a request
-    let verifyExistence = await accountRepo.findOneBy({ uuid: requesterUuid})
+    let verifyExistence = await accountRepo.findOneBy({ uuid: requesterUuid});
 
     if(verifyExistence == null) {
         res.status(404).send(`The requester UUID doesn't exist.`);
@@ -524,4 +585,14 @@ export const deleteBlock  = async (req: Request, res: Response) => {
     await AccountDataSource.manager.remove(block);
 
     res.status(204).send(`Removed the block.`);
+}
+
+function randomStringCreator(length: number) {
+    let newString = '';
+
+    for(let i = 0; i < length; i++) {
+        newString += charset.charAt(Math.floor(Math.random() * charset.length));
+    }
+
+    return newString;
 }
