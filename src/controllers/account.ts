@@ -164,7 +164,7 @@ export const getAccountBlockedList = async (req: Request, res: Response) => {
     }
 }
 
-// 
+// general endpoint for account creation
 export const postNewAccount = async (req: Request, res: Response) => { 
     try {
         let accountToCreate = req.body;
@@ -180,6 +180,7 @@ export const postNewAccount = async (req: Request, res: Response) => {
         let emailExists = await accountRepo.findOneBy({ email: accountToCreate.email});
         if(emailExists != null) {
             res.status(400).send(`This email is already in use.`);
+            return;
         }
 
         let account : Account = new Account();
@@ -447,6 +448,28 @@ export const putNewAccountSettings = async (req: Request, res: Response) => {
             return;
         } 
 
+        let email = req.body.email;
+        if(email != undefined && email != null) {
+            let emailExists = await accountRepo.findOneBy({ email: email});
+            if(emailExists != null) {
+                res.status(400).send(`This email is already in use.`);
+                return;
+            }
+            let verification : Verification = new Verification();
+            verification.accountUuid = requestingAccount.uuid;
+            verification.timeGenerated = new Date();
+            verification.address = randomStringCreator(32);
+    
+            await verificationRepo.create(verification);
+            requestingAccount.email = email;
+            requestingAccount.verified = false;
+        }
+
+        if(!requestingAccount.verified) {
+            res.status(403).send('You cannot change any further settings until you verify your email.');
+            return;
+        }
+
         let about = req.body.about;
         if(about != undefined && about != null) {
             requestingAccount.about == about;
@@ -461,13 +484,9 @@ export const putNewAccountSettings = async (req: Request, res: Response) => {
         if(password != undefined && password != null) {
             requestingAccount.password = await argon2.hash(password);
         }
-
-        let email = req.body.email;
-        if(email != undefined && email != null) {
-            requestingAccount.email == email;
-        }
         
         await accountRepo.save(requestingAccount);
+        res.status(204).send('Changed account settings.');
     } catch(error) {
         if (error instanceof Error) {
             console.log(`Problem updating account settings: ${error.message}`);
