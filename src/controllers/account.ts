@@ -466,6 +466,7 @@ export const putNewAccountSettings = async (req: Request, res: Response) => {
         }
 
         if(!requestingAccount.verified) {
+            await accountRepo.save(requestingAccount);
             res.status(403).send('You cannot change any further settings until you verify your email.');
             return;
         }

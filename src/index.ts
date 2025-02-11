@@ -3,6 +3,7 @@ import morgan from "morgan";
 import dotenv from "dotenv";
 import roomsRouter from "./routes/rooms";
 import accountRouter from "./routes/account";
+import verificationRouter from "./routes/verification";
 import "reflect-metadata";
 const cors = require('cors');
 
@@ -17,6 +18,7 @@ app.use(express.json());
 
 app.use('/rooms', roomsRouter);
 app.use('/account', accountRouter);
+app.use('/verification', verificationRouter);
 
 var server = app.listen(PORT, function () {
     console.log("Listening on port: " + PORT)
