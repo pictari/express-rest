@@ -202,13 +202,13 @@ export const postNewAccount = async (req: Request, res: Response) => {
         account.verified = false;
         account.email = accountToCreate.email;
         
-        await accountRepo.create(account);
+        await AccountDataSource.manager.save(account);
 
         verification.accountUuid = newUuid;
         verification.timeGenerated = new Date();
         verification.address = randomStringCreator(32);
 
-        await verificationRepo.create(verification);
+        await AccountDataSource.manager.save(verification);
 
         res.status(201).send(`Registration succeeded. Please verify your email.`);
     } catch(error) {
@@ -291,8 +291,8 @@ export const postNewFriendRequest  = async (req: Request, res: Response) => {
     }
 
     const pendingRequest = new PendingFriendship();
-    pendingRequest.account == verifyExistence;
-    pendingRequest.account2 == verifyExistence2;
+    pendingRequest.account = verifyExistence;
+    pendingRequest.account2 = verifyExistence2;
     
     await AccountDataSource.manager.save(pendingRequest);
     res.status(201).send(`Created a friendship request.`);
@@ -331,8 +331,8 @@ export const postNewBlock  = async (req: Request, res: Response) => {
     }
 
     const newBlock = new Block();
-    newBlock.account == verifyExistence;
-    newBlock.account2 == verifyExistence2;
+    newBlock.account = verifyExistence;
+    newBlock.account2 = verifyExistence2;
 
     // remove any friendship between the two people
     let toSort = [requesterUuid, requestedUuid];
@@ -344,10 +344,21 @@ export const postNewBlock  = async (req: Request, res: Response) => {
         .createQueryBuilder()
         .delete()
         .from(Friendship)
-        .where("accountUuid = :id, account2Uuid = :id2", { id: toSort[0], id2: toSort[1] })
+        .where("accountUuid = :id AND account2Uuid = :id2", { id: toSort[0], id2: toSort[1] })
         .execute().then((value) => {
             console.log(value);
         });
+
+        if(verifyExistence.totalFriends != null) {
+            verifyExistence.totalFriends -= 1;
+        }
+    
+        if(verifyExistence2.totalFriends != null) {
+            verifyExistence2.totalFriends -= 1;
+        }
+    
+        await accountRepo.save(verifyExistence);
+        await accountRepo.save(verifyExistence2);
     }
 
     // remove any pending friendship requests from either person
@@ -357,7 +368,7 @@ export const postNewBlock  = async (req: Request, res: Response) => {
         .createQueryBuilder()
         .delete()
         .from(PendingFriendship)
-        .where("accountUuid = :id, account2Uuid = :id2", { id: requesterUuid, id2: requestedUuid })
+        .where("accountUuid = :id AND account2Uuid = :id2", { id: requesterUuid, id2: requestedUuid })
         .execute().then((value) => {
             console.log(value);
         });
@@ -369,11 +380,14 @@ export const postNewBlock  = async (req: Request, res: Response) => {
         .createQueryBuilder()
         .delete()
         .from(PendingFriendship)
-        .where("accountUuid = :id, account2Uuid = :id2", { id: requestedUuid, id2: requesterUuid })
+        .where("accountUuid = :id AND account2Uuid = :id2", { id: requestedUuid, id2: requesterUuid })
         .execute().then((value) => {
             console.log(value);
         });
     }
+
+    await AccountDataSource.manager.save(newBlock);
+    res.status(201).send(`Blocked user with ID ${requestedUuid}.`);
 }
 
 // there is no better HTTP verb than POST for accepting friend requests
@@ -418,10 +432,26 @@ export const postAcceptRequest  = async (req: Request, res: Response) => {
     let toSort = [requesterUuid, requestedUuid];
     toSort.sort();
     const friendship = new Friendship();
-    friendship.accountUuid == toSort[0];
-    friendship.account2Uuid == toSort[1];
+    friendship.accountUuid = toSort[0];
+    friendship.account2Uuid = toSort[1];
     
     await AccountDataSource.manager.save(friendship);
+
+    if(verifyExistence.totalFriends == null) {
+        verifyExistence.totalFriends = 1;
+    } else {
+        verifyExistence.totalFriends += 1;
+    }
+
+    if(verifyExistence2.totalFriends == null) {
+        verifyExistence2.totalFriends = 1;
+    } else {
+        verifyExistence2.totalFriends += 1;
+    }
+
+    await accountRepo.save(verifyExistence);
+    await accountRepo.save(verifyExistence2);
+    
     res.status(201).send(`Created a friendship.`);
 }
 
@@ -571,6 +601,17 @@ export const deleteFriend  = async (req: Request, res: Response) => {
     }
 
     await AccountDataSource.manager.remove(friends);
+
+    if(verifyExistence.totalFriends != null) {
+        verifyExistence.totalFriends -= 1;
+    }
+
+    if(verifyExistence2.totalFriends != null) {
+        verifyExistence2.totalFriends -= 1;
+    }
+
+    await accountRepo.save(verifyExistence);
+    await accountRepo.save(verifyExistence2);
 
     res.status(204).send(`Deleted the friendship.`);
 }

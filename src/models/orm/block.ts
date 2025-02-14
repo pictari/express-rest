@@ -5,7 +5,7 @@ import { Account } from "./account";
 // performance
 
 // this is a unidirectional relationship so instigator is in the first col
-@Unique("block_constraint", ["accountUuid, account2Uuid"])
+@Unique("block_constraint", ["accountUuid", "account2Uuid"])
 @Entity()
 export class Block {
     @PrimaryColumn({

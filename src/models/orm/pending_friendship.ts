@@ -7,7 +7,7 @@ import { Account } from "./account";
 // this is a unidirectional relationship so instigator is in the first col
 // however, the server has to ensure that there exists no request from the second party
 // before creating a new one
-@Unique("pending_friendship_constraint", ["accountUuid, account2Uuid"])
+@Unique("pending_friendship_constraint", ["accountUuid", "account2Uuid"])
 @Entity()
 export class PendingFriendship {
     @PrimaryColumn({

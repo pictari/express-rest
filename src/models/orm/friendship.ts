@@ -6,7 +6,7 @@ import { Account } from "./account";
 
 // this is a bidirectional relationship so the UUIDs need to be SORTED
 // before inserts
-@Unique("friendship_constraint", ["accountUuid, account2Uuid"])
+@Unique("friendship_constraint", ["accountUuid", "account2Uuid"])
 @Entity()
 export class Friendship {
     @PrimaryColumn({
