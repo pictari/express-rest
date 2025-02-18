@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pictari-api
+  labels:
+    app: pictari-api
+  namespace: pictari-web
+spec:
+  strategy:
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: pictari-api
+  template:
+    metadata:
+      labels:
+        app: pictari-api
+        tier: front
+      namespace: pictari-web
+      annotations:
+        update-trigger: "1"
+    spec:
+      containers:
+        - name: pictari-api
+          image: "${IMAGE_TAG}"
+          ports:
+            - name: http
+              containerPort: 3000
+          resources:
+            requests:
+              cpu: 65m
+              memory: 256Mi
+            limits:
+              memory: 256Mi
+          envFrom:
+            - configMapRef:
+                name: logging-defaults
+            - secretRef:
+                name: pictari-api
