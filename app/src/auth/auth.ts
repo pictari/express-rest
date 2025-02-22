@@ -44,7 +44,7 @@ export const verifyAdministrator = async (
     res: Response,
     next: NextFunction
 ) => {
-    const jwtRole = res.locals?.payload?.role;
+    const jwtRole = res.locals?.payload?.type;
     if (jwtRole == 0) {
         next();
     }
@@ -58,7 +58,7 @@ export const verifyModerator = async (
     res: Response,
     next: NextFunction
 ) => {
-    const jwtRole = res.locals?.payload?.role;
+    const jwtRole = res.locals?.payload?.type;
     if (jwtRole == 0 || jwtRole == 1) {
         next();
     }
@@ -72,7 +72,7 @@ export const verifyOwner = async (
     res: Response,
     next: NextFunction
 ) => {
-    const jwtRole = res.locals?.payload?.role;
+    const jwtRole = res.locals?.payload?.type;
     const requestedId = req.params.uuid;
     const userId = res.locals?.payload?.uuid;
     if (jwtRole == 0 || jwtRole == 1 || userId == requestedId) {
@@ -80,5 +80,19 @@ export const verifyOwner = async (
     }
     else {
         res.status(403).send("This resource is scoped to its owner and moderators.");
+    }
+};
+
+export const verifyVerification = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    const verifyStatus = res.locals?.payload?.verification;
+    if (verifyStatus == true) {
+        next();
+    }
+    else {
+        res.status(403).send("You must verify your email address before you can access this endpoint.");
     }
 };

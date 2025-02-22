@@ -1,6 +1,7 @@
 import express, {Router} from 'express';
 import { deleteBlock, deleteFriend, deleteRequest, getAccountBlockedList, getAccountFriends, getAccountPendingFriendships, getPersonalAccountInfo, getPublicAccountShortened, getPublicAccountStatistics, postAcceptRequest, postNewAccount, postNewBlock, postNewFriendRequest, putNewAccountSettings } from '../controllers/account';
 
+
 const router: Router = express.Router();
 
 router.get('/:uuid', getPublicAccountShortened);

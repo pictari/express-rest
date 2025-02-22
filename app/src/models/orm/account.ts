@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryColumn } from "typeorm";
+import { Entity, Column, PrimaryColumn, Index } from "typeorm";
 
 // the properties in this entity are explicitly defined as nullable
 // (or not) in order to get a consistent result in case TypeORM
@@ -16,7 +16,8 @@ export class Account {
     // people can't decide if it's 254 or 320
     @Column({
         type: "text",
-        nullable: true
+        nullable: true,
+        unique: true
     })
     email!: string | null;
 
