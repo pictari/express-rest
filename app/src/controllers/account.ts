@@ -164,6 +164,29 @@ export const getAccountBlockedList = async (req: Request, res: Response) => {
     }
 }
 
+// use case is a search bar for adding friends/blocks
+export const getAccountSearchByName = async (req: Request, res: Response) => {
+    let requestedName = req.params.name;
+
+    let accounts = await accountRepo.find({
+        take: 10,
+        select: {
+            uuid: true,
+            name: true
+        },
+        where: {
+            name: '%' + requestedName + '%'
+        }
+    }
+);
+
+    if(accounts.length == 0) {
+        res.status(404).send(`Cannot find any accounts with that name.`);
+    } else {
+        res.status(200).json(accounts);
+    }
+}
+
 // general endpoint for account creation
 export const postNewAccount = async (req: Request, res: Response) => { 
     try {
