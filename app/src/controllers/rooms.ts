@@ -39,15 +39,22 @@ export const getRoomsList = async (req: Request, res: Response) =>
     }
 }
 
+
 export const getRoomDetails  = async (req: Request, res: Response) =>
 {
     let roomId: string = req.params.id;
     try {
         let input = {
             "TableName":"sample-data",
+            "ExpressionAttributeNames": {
+                "#P": "Private"
+            },
             "Key": {
                 "RoomId": {
                     "S":roomId
+                },
+                "#P": {
+                    "BOOL":false
                 }
             }
         };
@@ -69,3 +76,37 @@ export const getRoomDetails  = async (req: Request, res: Response) =>
         res.status(400).send(`Failed to retrieve details for room ${roomId}`);
     }
 }
+
+export const getPrivateRoomDetails  = async (req: Request, res: Response) =>
+    {
+        let roomId: string = req.params.id;
+        let roomKey: string = req.params.key;
+        try {
+            let input = {
+                "TableName":"sample-data",
+                "ExpressionAttributeValues": {
+                    ":p": {
+                      "S": roomKey
+                    }
+                },
+                "FilterExpression": "PrivateKey = :p"
+            };
+    
+            let response = await client.send(new ScanCommand(input));
+
+            if(response == null || response == undefined || response.Items == undefined || response.Items == null) {
+                res.status(404).send(`No room with key ${roomKey} exists.`);
+            } else {
+                let item = response.Items[0];
+                res.status(200).json(item);
+            }
+        } catch(error) {
+            if (error instanceof Error) {
+                console.log(`Failure to retrieve details for room ${roomId}: ${error.message}`);
+            }
+            else {
+                console.log(`Error: ${error}`);
+            }
+            res.status(400).send(`Failed to retrieve details for room ${roomId}`);
+        }
+    }
