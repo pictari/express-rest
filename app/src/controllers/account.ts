@@ -233,8 +233,9 @@ export const postNewAccount = async (req: Request, res: Response) => {
         verification.address = randomStringCreator(32);
 
         await AccountDataSource.manager.save(verification);
-
-        res.status(201).send(`Registration succeeded. Please verify your email.`);
+        //REMOVE VERIFICATION LINK FROM MESSAGE IN FINAL VERSION!! THIS IS JUST FOR TESTING IN DEV!
+        res.status(201).send(`Registration succeeded. Please verify your email. ${verification.address}`);
+        return;
     } catch(error) {
         if (error instanceof Error) {
             console.log(`Issue creating new account: ${error.message}`);
@@ -517,6 +518,10 @@ export const putNewAccountSettings = async (req: Request, res: Response) => {
             await verificationRepo.create(verification);
             requestingAccount.email = email;
             requestingAccount.verified = false;
+
+            //REMOVE VERIFICATION LINK FROM MESSAGE IN FINAL VERSION!! THIS IS JUST FOR TESTING IN DEV! 
+            res.status(200).send(`Changed email. No other settings are changed; retry when your email is verified. Verification link: ${verification.address}`);
+            return;
         }
 
         if(!requestingAccount.verified) {
