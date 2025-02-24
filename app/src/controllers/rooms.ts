@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { DynamoDBClient, GetItemCommand, ScanCommand } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 
 const client : DynamoDBClient = new DynamoDBClient({});
 
@@ -7,13 +8,13 @@ export const getRoomsList = async (req: Request, res: Response) =>
 {
     try {
         let input = {
-            "TableName":"sample-data",
+            "TableName":"sample-data-with-sort",
             "ExpressionAttributeNames": {
                 "#P": "Private"
             },
             "ExpressionAttributeValues": {
                 ":b": {
-                  "BOOL": false
+                  "N": "0"
                 }
             },
             "FilterExpression": "#P = :b",
@@ -39,22 +40,20 @@ export const getRoomsList = async (req: Request, res: Response) =>
     }
 }
 
-
+// frustrating fact about DynamoDB: they do not let you place any sort of index or composite primary key on a boolean
+// therefore, the private field must be a number because scanning the table has bad side effects on a larger dataset
 export const getRoomDetails  = async (req: Request, res: Response) =>
 {
     let roomId: string = req.params.id;
     try {
         let input = {
-            "TableName":"sample-data",
-            "ExpressionAttributeNames": {
-                "#P": "Private"
-            },
+            "TableName":"sample-data-with-sort",
             "Key": {
                 "RoomId": {
                     "S":roomId
                 },
-                "#P": {
-                    "BOOL":false
+                "Private": {
+                    "N": "0"
                 }
             }
         };
@@ -79,17 +78,21 @@ export const getRoomDetails  = async (req: Request, res: Response) =>
 
 export const getPrivateRoomDetails  = async (req: Request, res: Response) =>
     {
-        let roomId: string = req.params.id;
         let roomKey: string = req.params.key;
         try {
+            // FilterExpression shouldn't need to be here according to official documentation, but omitting it causes an error to be thrown
+            // does it add overhead? yes. is there an alternative? no.
+            // I believe Padraig would call this a feature
             let input = {
-                "TableName":"sample-data",
-                "ExpressionAttributeValues": {
-                    ":p": {
-                      "S": roomKey
+                "TableName":"sample-data-with-sort",
+                "Index":"JoinKey-index",
+                "KeyConditionExpression": "JoinKey = :join",
+                "ExpressionAttributeValues":{
+                    ":join":{
+                        "S":roomKey
                     }
                 },
-                "FilterExpression": "PrivateKey = :p"
+                "FilterExpression":"JoinKey = :join"
             };
     
             let response = await client.send(new ScanCommand(input));
@@ -102,11 +105,11 @@ export const getPrivateRoomDetails  = async (req: Request, res: Response) =>
             }
         } catch(error) {
             if (error instanceof Error) {
-                console.log(`Failure to retrieve details for room ${roomId}: ${error.message}`);
+                console.log(`Failure to retrieve details for room with key ${roomKey}: ${error.message}`);
             }
             else {
                 console.log(`Error: ${error}`);
             }
-            res.status(400).send(`Failed to retrieve details for room ${roomId}`);
+            res.status(400).send(`Failed to retrieve details for room with key ${roomKey}`);
         }
     }
