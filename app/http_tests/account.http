@@ -1,5 +1,6 @@
 @endpoint = http://localhost:3000/account
 @endpointVerif = http://localhost:3000/verification
+@endpointLogin = http://localhost:3000/login
 
 //TODO: replace hardcoded UUIDs, verification links, etc. with parameters. These are randomly generated so they won't be the same if account creation gets run on a blank database.
 POST {{endpoint}} HTTP/1.1
@@ -7,6 +8,14 @@ content-type: application/json
 
 { "email":"darkarts420@gmail.com",
   "name": "LordVoldemort",
+  "password": "passwordlicious"
+}
+###
+// login for above account
+POST {{endpointLogin}} HTTP/1.1
+content-type: application/json
+
+{ "email":"darkarts420@gmail.com",
   "password": "passwordlicious"
 }
 ###
@@ -21,6 +30,11 @@ content-type: application/json
 ###
 
 GET {{endpoint}}/1366bb6d-c91d-4e5e-9836-8a101d196cf2 HTTP/1.1
+content-type: application/json
+
+###
+
+GET {{endpoint}}/search/Vold HTTP/1.1
 content-type: application/json
 
 ###

@@ -9,6 +9,7 @@ import Joi, { date } from "joi";
 import { ValidateAccountPost, ValidateAccountPut } from "../models/rest/account";
 import argon2 from "argon2";
 import { v4 } from "uuid";
+import { ILike, Like } from "typeorm";
 
 const accountRepo = AccountDataSource.getRepository(Account);
 const verificationRepo = AccountDataSource.getRepository(Verification);
@@ -175,7 +176,7 @@ export const getAccountSearchByName = async (req: Request, res: Response) => {
             name: true
         },
         where: {
-            name: '%' + requestedName + '%'
+            name: Like(`%${requestedName}%`)
         }
     }
 );
