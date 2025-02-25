@@ -58,6 +58,11 @@ GET {{endpoint}}/1366bb6d-c91d-4e5e-9836-8a101d196cf2/friends/pending HTTP/1.1
 content-type: application/json
 
 ###
+GET {{endpoint}}/284a38b6-b7d9-4ad6-a2b3-c9d6d18a583a/friends/pending HTTP/1.1
+content-type: application/json
+
+###
+
 
 GET {{endpoint}}/1366bb6d-c91d-4e5e-9836-8a101d196cf2/blocks HTTP/1.1
 content-type: application/json

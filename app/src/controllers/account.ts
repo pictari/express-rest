@@ -21,26 +21,25 @@ const blockRepo = AccountDataSource.getRepository(Block);
 const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_";
 
 // use case is profile page
-export const getPublicAccountStatistics = async (req: Request, res: Response) =>
-{
+export const getPublicAccountStatistics = async (req: Request, res: Response) => {
     let requestedUuid = req.params.uuid;
     let matchingAccount = await accountRepo.find({
-            select: {
-                userType: true,
-                name: true,
-                about: true,
-                dateGenerated: true,
-                gamesPlayed: true,
-                totalRating: true,
-                totalFriends: true
-            },
-            where: {
-                uuid: requestedUuid
-            }
+        select: {
+            userType: true,
+            name: true,
+            about: true,
+            dateGenerated: true,
+            gamesPlayed: true,
+            totalRating: true,
+            totalFriends: true
+        },
+        where: {
+            uuid: requestedUuid
         }
+    }
     );
 
-    if(matchingAccount.length == 0) {
+    if (matchingAccount.length == 0) {
         res.status(404).send(`Cannot find an account with that UUID.`);
     } else {
         res.status(200).json(matchingAccount[0]);
@@ -48,41 +47,40 @@ export const getPublicAccountStatistics = async (req: Request, res: Response) =>
 }
 
 // use case is room and friend listings
-export const getPublicAccountShortened = async (req: Request, res: Response) =>
-{
-        let requestedUuid = req.params.uuid;
-        let matchingAccount = await accountRepo.find({
-                select: {
-                    userType: true,
-                    name: true
-                },
-                where: {
-                    uuid: requestedUuid
-                }
-            }
-        );
-    
-        if(matchingAccount.length == 0) {
-            res.status(404).send(`Cannot find an account with that UUID.`);
-        } else {
-            res.status(200).json(matchingAccount[0]);
+export const getPublicAccountShortened = async (req: Request, res: Response) => {
+    let requestedUuid = req.params.uuid;
+    let matchingAccount = await accountRepo.find({
+        select: {
+            userType: true,
+            name: true
+        },
+        where: {
+            uuid: requestedUuid
         }
+    }
+    );
+
+    if (matchingAccount.length == 0) {
+        res.status(404).send(`Cannot find an account with that UUID.`);
+    } else {
+        res.status(200).json(matchingAccount[0]);
+    }
 }
 
 // use case is personal settings
 export const getPersonalAccountInfo = async (req: Request, res: Response) => {
     let requestedUuid = req.params.uuid;
     let personalInfo = await accountRepo.find({
-            select: {
-                email: true
-            },
-            where: {
-                uuid: requestedUuid
-            }
+        select: {
+            email: true
+        },
+        where: {
+            uuid: requestedUuid
         }
+    }
     );
 
-    if(personalInfo.length == 0) {
+    if (personalInfo.length == 0) {
         res.status(404).send(`Cannot find an account with that UUID.`);
     } else {
         res.status(200).json(personalInfo[0]);
@@ -96,18 +94,18 @@ export const getAccountFriends = async (req: Request, res: Response) => {
     // friends are bidirectional (both can terminate the relationship)
     // so the other UUID can be in either field due to sorting
     let friends = await friendshipRepo.find({
-            select: {
-                accountUuid: true,
-                account2Uuid: true
-            },
-            where: [
-                {accountUuid: requestedUuid},
-                {account2Uuid: requestedUuid}
-            ]
-        }
+        select: {
+            accountUuid: true,
+            account2Uuid: true
+        },
+        where: [
+            { accountUuid: requestedUuid },
+            { account2Uuid: requestedUuid }
+        ]
+    }
     );
 
-    if(friends.length == 0) {
+    if (friends.length == 0) {
         res.status(404).send(`Cannot find an account with that UUID OR that account has no friends.`);
     } else {
         res.status(200).json(friends);
@@ -123,19 +121,19 @@ export const getAccountPendingFriendships = async (req: Request, res: Response) 
 
     // account owner's UUID in the first col = request was sent BY them
     // account owner's UUID in the second col = request was sent TO them
-    let friends = await friendshipRepo.find({
+    let friends = await pendingRepo.find({
         select: {
             accountUuid: true,
             account2Uuid: true
         },
         where: [
-            {accountUuid: requestedUuid},
-            {account2Uuid: requestedUuid}
+            { accountUuid: requestedUuid },
+            { account2Uuid: requestedUuid }
         ]
     }
-);
+    );
 
-    if(friends.length == 0) {
+    if (friends.length == 0) {
         res.status(404).send(`Cannot find an account with that UUID OR that account has no unresolved requests.`);
     } else {
         res.status(200).json(friends);
@@ -149,16 +147,16 @@ export const getAccountBlockedList = async (req: Request, res: Response) => {
     // for blocks, the instigating account is always the first one as it's
     // unidirectional
     let blocked = await blockRepo.find({
-            select: {
-                account2Uuid: true
-            },
-            where: {
-                accountUuid: requestedUuid
-            }
+        select: {
+            account2Uuid: true
+        },
+        where: {
+            accountUuid: requestedUuid
         }
+    }
     );
 
-    if(blocked.length == 0) {
+    if (blocked.length == 0) {
         res.status(404).send(`Cannot find an account with that UUID OR that account never blocked anyone.`);
     } else {
         res.status(200).json(blocked);
@@ -179,9 +177,9 @@ export const getAccountSearchByName = async (req: Request, res: Response) => {
             name: Like(`%${requestedName}%`)
         }
     }
-);
+    );
 
-    if(accounts.length == 0) {
+    if (accounts.length == 0) {
         res.status(404).send(`Cannot find any accounts with that name.`);
     } else {
         res.status(200).json(accounts);
@@ -189,32 +187,32 @@ export const getAccountSearchByName = async (req: Request, res: Response) => {
 }
 
 // general endpoint for account creation
-export const postNewAccount = async (req: Request, res: Response) => { 
+export const postNewAccount = async (req: Request, res: Response) => {
     try {
         let accountToCreate = req.body;
 
-        let validationResult : Joi.ValidationResult = ValidateAccountPost(accountToCreate);
+        let validationResult: Joi.ValidationResult = ValidateAccountPost(accountToCreate);
 
         if (validationResult.error) {
             res.status(400).json(validationResult.error);
             return;
         }
 
-        
-        let emailExists = await accountRepo.findOneBy({ email: accountToCreate.email});
-        if(emailExists != null) {
+
+        let emailExists = await accountRepo.findOneBy({ email: accountToCreate.email });
+        if (emailExists != null) {
             res.status(400).send(`This email is already in use.`);
             return;
         }
 
-        let nameExists = await accountRepo.findOneBy({ name: accountToCreate.name});
-        if(nameExists != null) {
+        let nameExists = await accountRepo.findOneBy({ name: accountToCreate.name });
+        if (nameExists != null) {
             res.status(400).send(`This name is already in use.`);
             return;
         }
 
-        let account : Account = new Account();
-        let verification : Verification = new Verification();
+        let account: Account = new Account();
+        let verification: Verification = new Verification();
 
         // theoretically, UUID will never conflict
         let newUuid = v4();
@@ -231,7 +229,7 @@ export const postNewAccount = async (req: Request, res: Response) => {
         account.totalRating = 0;
         account.verified = false;
         account.email = accountToCreate.email;
-        
+
         await AccountDataSource.manager.save(account);
 
         verification.accountUuid = newUuid;
@@ -242,7 +240,7 @@ export const postNewAccount = async (req: Request, res: Response) => {
         //REMOVE VERIFICATION LINK FROM MESSAGE IN FINAL VERSION!! THIS IS JUST FOR TESTING IN DEV!
         res.status(201).send(`Registration succeeded. Please verify your email. ${verification.address}`);
         return;
-    } catch(error) {
+    } catch (error) {
         if (error instanceof Error) {
             console.log(`Issue creating new account: ${error.message}`);
         }
@@ -254,23 +252,23 @@ export const postNewAccount = async (req: Request, res: Response) => {
 }
 
 // self explanatory
-export const postNewFriendRequest  = async (req: Request, res: Response) => {
+export const postNewFriendRequest = async (req: Request, res: Response) => {
     let requesterUuid = req.params.uuid;
     let requestedUuid = req.params.uuid2;
 
     // does the requester UUID even exist?
     // these checks also double in function as fetching the needed accounts to
     // create a request
-    let verifyExistence = await accountRepo.findOneBy({ uuid: requesterUuid});
+    let verifyExistence = await accountRepo.findOneBy({ uuid: requesterUuid });
 
-    if(verifyExistence == null) {
+    if (verifyExistence == null) {
         res.status(404).send(`The requester UUID doesn't exist.`);
         return;
-    } 
+    }
     // does the requested UUID even exist?
-    let verifyExistence2 = await accountRepo.findOneBy({ uuid: requestedUuid})
+    let verifyExistence2 = await accountRepo.findOneBy({ uuid: requestedUuid })
 
-    if(verifyExistence2 == null) {
+    if (verifyExistence2 == null) {
         res.status(404).send(`The requested UUID doesn't exist.`);
         return;
     }
@@ -278,9 +276,9 @@ export const postNewFriendRequest  = async (req: Request, res: Response) => {
     // check that the friendship doesn't already exist
     let toSort = [requesterUuid, requestedUuid];
     toSort.sort();
-    let friends = await friendshipRepo.findOneBy({ accountUuid:toSort[0], account2Uuid:toSort[1]});
+    let friends = await friendshipRepo.findOneBy({ accountUuid: toSort[0], account2Uuid: toSort[1] });
 
-    if(friends != null) {
+    if (friends != null) {
         res.status(400).send(`This friendship already exists.`);
         return;
     }
@@ -295,28 +293,28 @@ export const postNewFriendRequest  = async (req: Request, res: Response) => {
             account2Uuid: true
         },
         where: [
-            {accountUuid: requesterUuid, account2Uuid: requestedUuid},
-            {accountUuid: requestedUuid, account2Uuid: requesterUuid}
+            { accountUuid: requesterUuid, account2Uuid: requestedUuid },
+            { accountUuid: requestedUuid, account2Uuid: requesterUuid }
         ]
     });
 
-    if(requests.length != 0) {
+    if (requests.length != 0) {
         res.status(400).send(`A request for this friendship already exists.`);
         return;
     }
 
     // check for blocks, since blocked players (on either side) can't send
     // requests to each other
-    let blocked = await blockRepo.findOneBy({accountUuid: requesterUuid});
+    let blocked = await blockRepo.findOneBy({ accountUuid: requesterUuid });
 
-    if(blocked != null) {
+    if (blocked != null) {
         res.status(400).send(`A block exists between the two accounts.`);
         return;
     }
 
-    let blocked2 = await blockRepo.findOneBy({accountUuid: requestedUuid});
+    let blocked2 = await blockRepo.findOneBy({ accountUuid: requestedUuid });
 
-    if(blocked2 != null) {
+    if (blocked2 != null) {
         res.status(400).send(`A block exists between the two accounts.`);
         return;
     }
@@ -324,39 +322,39 @@ export const postNewFriendRequest  = async (req: Request, res: Response) => {
     const pendingRequest = new PendingFriendship();
     pendingRequest.account = verifyExistence;
     pendingRequest.account2 = verifyExistence2;
-    
+
     await AccountDataSource.manager.save(pendingRequest);
     res.status(201).send(`Created a friendship request.`);
     return;
 }
 
 // self explanatory
-export const postNewBlock  = async (req: Request, res: Response) => {
+export const postNewBlock = async (req: Request, res: Response) => {
     let requesterUuid = req.params.uuid;
     let requestedUuid = req.params.uuid2;
 
     // does the requester UUID even exist?
     // these checks also double in function as fetching the needed accounts to
     // create a request
-    let verifyExistence = await accountRepo.findOneBy({ uuid: requesterUuid})
+    let verifyExistence = await accountRepo.findOneBy({ uuid: requesterUuid })
 
-    if(verifyExistence == null) {
+    if (verifyExistence == null) {
         res.status(404).send(`The requester UUID doesn't exist.`);
         return;
-    } 
+    }
     // does the requested UUID even exist?
-    let verifyExistence2 = await accountRepo.findOneBy({ uuid: requestedUuid})
+    let verifyExistence2 = await accountRepo.findOneBy({ uuid: requestedUuid })
 
-    if(verifyExistence2 == null) {
+    if (verifyExistence2 == null) {
         res.status(404).send(`The requested UUID doesn't exist.`);
         return;
     }
 
 
     // check that block doesn't already exist
-    let blocked = await blockRepo.findOneBy({accountUuid: requesterUuid});
+    let blocked = await blockRepo.findOneBy({ accountUuid: requesterUuid });
 
-    if(blocked != null) {
+    if (blocked != null) {
         res.status(400).send(`This account was already blocked.`);
         return;
     }
@@ -368,53 +366,53 @@ export const postNewBlock  = async (req: Request, res: Response) => {
     // remove any friendship between the two people
     let toSort = [requesterUuid, requestedUuid];
     toSort.sort();
-    let friends = await friendshipRepo.findOneBy({ accountUuid:toSort[0], account2Uuid:toSort[1]});
+    let friends = await friendshipRepo.findOneBy({ accountUuid: toSort[0], account2Uuid: toSort[1] });
 
-    if(friends != null) {
+    if (friends != null) {
         await AccountDataSource
-        .createQueryBuilder()
-        .delete()
-        .from(Friendship)
-        .where("accountUuid = :id AND account2Uuid = :id2", { id: toSort[0], id2: toSort[1] })
-        .execute().then((value) => {
-            console.log(value);
-        });
+            .createQueryBuilder()
+            .delete()
+            .from(Friendship)
+            .where("accountUuid = :id AND account2Uuid = :id2", { id: toSort[0], id2: toSort[1] })
+            .execute().then((value) => {
+                console.log(value);
+            });
 
-        if(verifyExistence.totalFriends != null) {
+        if (verifyExistence.totalFriends != null) {
             verifyExistence.totalFriends -= 1;
         }
-    
-        if(verifyExistence2.totalFriends != null) {
+
+        if (verifyExistence2.totalFriends != null) {
             verifyExistence2.totalFriends -= 1;
         }
-    
+
         await accountRepo.save(verifyExistence);
         await accountRepo.save(verifyExistence2);
     }
 
     // remove any pending friendship requests from either person
-    let possibleRequest = await pendingRepo.findOneBy({accountUuid:requesterUuid});
-    if(possibleRequest != null) {
+    let possibleRequest = await pendingRepo.findOneBy({ accountUuid: requesterUuid });
+    if (possibleRequest != null) {
         await AccountDataSource
-        .createQueryBuilder()
-        .delete()
-        .from(PendingFriendship)
-        .where("accountUuid = :id AND account2Uuid = :id2", { id: requesterUuid, id2: requestedUuid })
-        .execute().then((value) => {
-            console.log(value);
-        });
+            .createQueryBuilder()
+            .delete()
+            .from(PendingFriendship)
+            .where("accountUuid = :id AND account2Uuid = :id2", { id: requesterUuid, id2: requestedUuid })
+            .execute().then((value) => {
+                console.log(value);
+            });
     }
 
-    let possibleRequest2 = await pendingRepo.findOneBy({accountUuid:requestedUuid});
-    if(possibleRequest2 != null) {
+    let possibleRequest2 = await pendingRepo.findOneBy({ accountUuid: requestedUuid });
+    if (possibleRequest2 != null) {
         await AccountDataSource
-        .createQueryBuilder()
-        .delete()
-        .from(PendingFriendship)
-        .where("accountUuid = :id AND account2Uuid = :id2", { id: requestedUuid, id2: requesterUuid })
-        .execute().then((value) => {
-            console.log(value);
-        });
+            .createQueryBuilder()
+            .delete()
+            .from(PendingFriendship)
+            .where("accountUuid = :id AND account2Uuid = :id2", { id: requestedUuid, id2: requesterUuid })
+            .execute().then((value) => {
+                console.log(value);
+            });
     }
 
     await AccountDataSource.manager.save(newBlock);
@@ -422,21 +420,21 @@ export const postNewBlock  = async (req: Request, res: Response) => {
 }
 
 // there is no better HTTP verb than POST for accepting friend requests
-export const postAcceptRequest  = async (req: Request, res: Response) => {
+export const postAcceptRequest = async (req: Request, res: Response) => {
     let requesterUuid = req.params.uuid;
     let requestedUuid = req.params.uuid2;
 
     // does the requester UUID even exist?
-    let verifyExistence = await accountRepo.findOneBy({ uuid: requesterUuid});
+    let verifyExistence = await accountRepo.findOneBy({ uuid: requesterUuid });
 
-    if(verifyExistence == null) {
+    if (verifyExistence == null) {
         res.status(404).send(`The requester UUID doesn't exist.`);
         return;
-    } 
+    }
     // does the requested UUID even exist?
-    let verifyExistence2 = await accountRepo.findOneBy({ uuid: requestedUuid});
+    let verifyExistence2 = await accountRepo.findOneBy({ uuid: requestedUuid });
 
-    if(verifyExistence2 == null) {
+    if (verifyExistence2 == null) {
         res.status(404).send(`The requested UUID doesn't exist.`);
         return;
     }
@@ -453,7 +451,7 @@ export const postAcceptRequest  = async (req: Request, res: Response) => {
         }
     });
 
-    if(requests.length == 0) {
+    if (requests.length == 0) {
         res.status(404).send(`There is no such request for a friendship.`);
         return;
     }
@@ -465,16 +463,16 @@ export const postAcceptRequest  = async (req: Request, res: Response) => {
     const friendship = new Friendship();
     friendship.accountUuid = toSort[0];
     friendship.account2Uuid = toSort[1];
-    
+
     await AccountDataSource.manager.save(friendship);
 
-    if(verifyExistence.totalFriends == null) {
+    if (verifyExistence.totalFriends == null) {
         verifyExistence.totalFriends = 1;
     } else {
         verifyExistence.totalFriends += 1;
     }
 
-    if(verifyExistence2.totalFriends == null) {
+    if (verifyExistence2.totalFriends == null) {
         verifyExistence2.totalFriends = 1;
     } else {
         verifyExistence2.totalFriends += 1;
@@ -482,7 +480,7 @@ export const postAcceptRequest  = async (req: Request, res: Response) => {
 
     await accountRepo.save(verifyExistence);
     await accountRepo.save(verifyExistence2);
-    
+
     res.status(201).send(`Created a friendship.`);
 }
 
@@ -492,7 +490,7 @@ export const putNewAccountSettings = async (req: Request, res: Response) => {
     try {
         let newSettings = req.body;
 
-        let validationResult : Joi.ValidationResult = ValidateAccountPut(newSettings);
+        let validationResult: Joi.ValidationResult = ValidateAccountPut(newSettings);
 
         if (validationResult.error) {
             res.status(400).json(validationResult.error);
@@ -502,25 +500,25 @@ export const putNewAccountSettings = async (req: Request, res: Response) => {
         let requesterUuid = req.params.uuid;
 
         // does the requester UUID even exist?
-        let requestingAccount = await accountRepo.findOneBy({ uuid: requesterUuid});
+        let requestingAccount = await accountRepo.findOneBy({ uuid: requesterUuid });
 
-        if(requestingAccount == null) {
+        if (requestingAccount == null) {
             res.status(404).send(`The requester UUID doesn't exist.`);
             return;
-        } 
+        }
 
         let email = req.body.email;
-        if(email != undefined && email != null) {
-            let emailExists = await accountRepo.findOneBy({ email: email});
-            if(emailExists != null) {
+        if (email != undefined && email != null) {
+            let emailExists = await accountRepo.findOneBy({ email: email });
+            if (emailExists != null) {
                 res.status(400).send(`This email is already in use.`);
                 return;
             }
-            let verification : Verification = new Verification();
+            let verification: Verification = new Verification();
             verification.accountUuid = requestingAccount.uuid;
             verification.timeGenerated = new Date();
             verification.address = randomStringCreator(32);
-    
+
             await AccountDataSource.manager.save(verification);
             requestingAccount.email = email;
             requestingAccount.verified = false;
@@ -532,21 +530,21 @@ export const putNewAccountSettings = async (req: Request, res: Response) => {
             return;
         }
 
-        if(!requestingAccount.verified) {
+        if (!requestingAccount.verified) {
             await accountRepo.save(requestingAccount);
             res.status(403).send('You cannot change any further settings until you verify your email.');
             return;
         }
 
         let about = req.body.about;
-        if(about != undefined && about != null) {
+        if (about != undefined && about != null) {
             requestingAccount.about = about;
         }
 
         let name = req.body.name;
-        if(name != undefined && name != null) {
-            let nameExists = await accountRepo.findOneBy({ name: name});
-            if(nameExists != null) {
+        if (name != undefined && name != null) {
+            let nameExists = await accountRepo.findOneBy({ name: name });
+            if (nameExists != null) {
                 res.status(400).send(`This name is already in use.`);
                 return;
             }
@@ -554,13 +552,13 @@ export const putNewAccountSettings = async (req: Request, res: Response) => {
         }
 
         let password = req.body.password;
-        if(password != undefined && password != null) {
+        if (password != undefined && password != null) {
             requestingAccount.password = await argon2.hash(password);
         }
-        
+
         await accountRepo.save(requestingAccount);
         res.status(204).send('Changed account settings.');
-    } catch(error) {
+    } catch (error) {
         if (error instanceof Error) {
             console.log(`Problem updating account settings: ${error.message}`);
         }
@@ -572,21 +570,21 @@ export const putNewAccountSettings = async (req: Request, res: Response) => {
 }
 
 // effectively declines the incoming request
-export const deleteRequest  = async (req: Request, res: Response) => {
+export const deleteRequest = async (req: Request, res: Response) => {
     let requesterUuid = req.params.uuid;
     let requestedUuid = req.params.uuid2;
 
     // does the requester UUID even exist?
-    let verifyExistence = await accountRepo.findOneBy({ uuid: requesterUuid})
+    let verifyExistence = await accountRepo.findOneBy({ uuid: requesterUuid })
 
-    if(verifyExistence == null) {
+    if (verifyExistence == null) {
         res.status(404).send(`The requester UUID doesn't exist.`);
         return;
-    } 
+    }
     // does the requested UUID even exist?
-    let verifyExistence2 = await accountRepo.findOneBy({ uuid: requestedUuid})
+    let verifyExistence2 = await accountRepo.findOneBy({ uuid: requestedUuid })
 
-    if(verifyExistence2 == null) {
+    if (verifyExistence2 == null) {
         res.status(404).send(`The requested UUID doesn't exist.`);
         return;
     }
@@ -603,7 +601,7 @@ export const deleteRequest  = async (req: Request, res: Response) => {
         }
     });
 
-    if(requests.length == 0) {
+    if (requests.length == 0) {
         res.status(404).send(`There is no such request for a friendship.`);
         return;
     }
@@ -614,41 +612,41 @@ export const deleteRequest  = async (req: Request, res: Response) => {
 }
 
 // deletes the two way relationship
-export const deleteFriend  = async (req: Request, res: Response) => {
+export const deleteFriend = async (req: Request, res: Response) => {
     let requesterUuid = req.params.uuid;
     let requestedUuid = req.params.uuid2;
 
     // does the requester UUID even exist?
-    let verifyExistence = await accountRepo.findOneBy({ uuid: requesterUuid})
+    let verifyExistence = await accountRepo.findOneBy({ uuid: requesterUuid })
 
-    if(verifyExistence == null) {
+    if (verifyExistence == null) {
         res.status(404).send(`The requester UUID doesn't exist.`);
         return;
-    } 
+    }
     // does the requested UUID even exist?
-    let verifyExistence2 = await accountRepo.findOneBy({ uuid: requestedUuid})
+    let verifyExistence2 = await accountRepo.findOneBy({ uuid: requestedUuid })
 
-    if(verifyExistence2 == null) {
+    if (verifyExistence2 == null) {
         res.status(404).send(`The requested UUID doesn't exist.`);
         return;
     }
 
     let toSort = [requesterUuid, requestedUuid];
     toSort.sort();
-    let friends = await friendshipRepo.findOneBy({ accountUuid:toSort[0], account2Uuid:toSort[1]});
+    let friends = await friendshipRepo.findOneBy({ accountUuid: toSort[0], account2Uuid: toSort[1] });
 
-    if(friends == null) {
+    if (friends == null) {
         res.status(404).send(`No such friendship exists`);
         return;
     }
 
     await AccountDataSource.manager.remove(friends);
 
-    if(verifyExistence.totalFriends != null) {
+    if (verifyExistence.totalFriends != null) {
         verifyExistence.totalFriends -= 1;
     }
 
-    if(verifyExistence2.totalFriends != null) {
+    if (verifyExistence2.totalFriends != null) {
         verifyExistence2.totalFriends -= 1;
     }
 
@@ -659,28 +657,28 @@ export const deleteFriend  = async (req: Request, res: Response) => {
 }
 
 // deletes the two way relationship
-export const deleteBlock  = async (req: Request, res: Response) => {
+export const deleteBlock = async (req: Request, res: Response) => {
     let requesterUuid = req.params.uuid;
     let requestedUuid = req.params.uuid2;
 
     // does the requester UUID even exist?
-    let verifyExistence = await accountRepo.findOneBy({ uuid: requesterUuid})
+    let verifyExistence = await accountRepo.findOneBy({ uuid: requesterUuid })
 
-    if(verifyExistence == null) {
+    if (verifyExistence == null) {
         res.status(404).send(`The requester UUID doesn't exist.`);
         return;
-    } 
+    }
     // does the requested UUID even exist?
-    let verifyExistence2 = await accountRepo.findOneBy({ uuid: requestedUuid})
+    let verifyExistence2 = await accountRepo.findOneBy({ uuid: requestedUuid })
 
-    if(verifyExistence2 == null) {
+    if (verifyExistence2 == null) {
         res.status(404).send(`The requested UUID doesn't exist.`);
         return;
     }
 
-    let block = await blockRepo.findOneBy({ accountUuid:requesterUuid, account2Uuid:requestedUuid});
+    let block = await blockRepo.findOneBy({ accountUuid: requesterUuid, account2Uuid: requestedUuid });
 
-    if(block == null) {
+    if (block == null) {
         res.status(404).send(`No such block exists.`);
         return;
     }
@@ -693,7 +691,7 @@ export const deleteBlock  = async (req: Request, res: Response) => {
 function randomStringCreator(length: number) {
     let newString = '';
 
-    for(let i = 0; i < length; i++) {
+    for (let i = 0; i < length; i++) {
         newString += charset.charAt(Math.floor(Math.random() * charset.length));
     }
 
