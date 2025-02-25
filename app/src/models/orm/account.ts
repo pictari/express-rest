@@ -40,7 +40,12 @@ export class Account {
     })
     password!: string | null;
 
-    @Column("char", { length: 16, nullable: true })
+    @Column({
+        type: "char",
+        length: 16,
+        nullable: true,
+        unique: true
+    })
     name!: string | null;
 
     @Column({

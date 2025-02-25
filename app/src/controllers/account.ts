@@ -207,6 +207,12 @@ export const postNewAccount = async (req: Request, res: Response) => {
             return;
         }
 
+        let nameExists = await accountRepo.findOneBy({ name: accountToCreate.name});
+        if(nameExists != null) {
+            res.status(400).send(`This name is already in use.`);
+            return;
+        }
+
         let account : Account = new Account();
         let verification : Verification = new Verification();
 
@@ -539,6 +545,11 @@ export const putNewAccountSettings = async (req: Request, res: Response) => {
 
         let name = req.body.name;
         if(name != undefined && name != null) {
+            let nameExists = await accountRepo.findOneBy({ name: name});
+            if(nameExists != null) {
+                res.status(400).send(`This name is already in use.`);
+                return;
+            }
             requestingAccount.name = name;
         }
 
