@@ -1,8 +1,8 @@
 import express, {Router} from 'express';
-import { postVerification } from '../controllers/verification';
+import { getVerification } from '../controllers/verification';
 
 const router: Router = express.Router();
 
-router.post('/:address', postVerification);
+router.get('/:address', getVerification);
 
 export default router;

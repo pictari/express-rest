@@ -8,7 +8,7 @@ const verificationRepo = AccountDataSource.getRepository(Verification);
 
 // similar to accepting friendships, there's just no better HTTP method for this
 // purpose
-export const postVerification = async (req: Request, res: Response) => {
+export const getVerification = async (req: Request, res: Response) => {
     try {
         let givenAddress = req.params.address;
         let matchingVerification = await verificationRepo.findOneBy({ address: givenAddress});

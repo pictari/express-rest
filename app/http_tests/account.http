@@ -112,11 +112,11 @@ DELETE {{endpoint}}/1366bb6d-c91d-4e5e-9836-8a101d196cf2/friends/284a38b6-b7d9-4
 content-type: application/json
 
 ###
-POST {{endpointVerif}}/LPfpNseAZ8x8h-TGodwzxgOrxWSlDUXE HTTP/1.1
+GET {{endpointVerif}}/LPfpNseAZ8x8h-TGodwzxgOrxWSlDUXE HTTP/1.1
 content-type: application/json
 
 ###
-POST {{endpointVerif}}/_NsqXJQo2M1nUdNJZ9mB_ld37_l5VvNH HTTP/1.1
+GET {{endpointVerif}}/_NsqXJQo2M1nUdNJZ9mB_ld37_l5VvNH HTTP/1.1
 content-type: application/json
 
 ###
