@@ -84,6 +84,25 @@ content-type: application/json
 
 ###
 
+PUT {{endpoint}}/1366bb6d-c91d-4e5e-9836-8a101d196cf2/profile/settings HTTP/1.1
+content-type: application/json
+
+{
+    "email":"ImVerySadNow@fakedomain.com",
+    "about":"My about will never get changed..."
+}
+
+###
+
+PUT {{endpoint}}/1366bb6d-c91d-4e5e-9836-8a101d196cf2/profile/settings HTTP/1.1
+content-type: application/json
+
+{
+    "about":"My about will get changed now."
+}
+
+###
+
 DELETE {{endpoint}}/1366bb6d-c91d-4e5e-9836-8a101d196cf2/blocks/284a38b6-b7d9-4ad6-a2b3-c9d6d18a583a/ HTTP/1.1
 content-type: application/json
 
@@ -93,7 +112,11 @@ DELETE {{endpoint}}/1366bb6d-c91d-4e5e-9836-8a101d196cf2/friends/284a38b6-b7d9-4
 content-type: application/json
 
 ###
-POST {{endpointVerif}}/thtlsoHfvGKm2IEjeKZDhDtGIo4jrVsh HTTP/1.1
+POST {{endpointVerif}}/LPfpNseAZ8x8h-TGodwzxgOrxWSlDUXE HTTP/1.1
+content-type: application/json
+
+###
+POST {{endpointVerif}}/_NsqXJQo2M1nUdNJZ9mB_ld37_l5VvNH HTTP/1.1
 content-type: application/json
 
 ###

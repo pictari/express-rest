@@ -515,9 +515,11 @@ export const putNewAccountSettings = async (req: Request, res: Response) => {
             verification.timeGenerated = new Date();
             verification.address = randomStringCreator(32);
     
-            await verificationRepo.create(verification);
+            await AccountDataSource.manager.save(verification);
             requestingAccount.email = email;
             requestingAccount.verified = false;
+
+            await accountRepo.save(requestingAccount);
 
             //REMOVE VERIFICATION LINK FROM MESSAGE IN FINAL VERSION!! THIS IS JUST FOR TESTING IN DEV! 
             res.status(200).send(`Changed email. No other settings are changed; retry when your email is verified. Verification link: ${verification.address}`);
@@ -532,12 +534,12 @@ export const putNewAccountSettings = async (req: Request, res: Response) => {
 
         let about = req.body.about;
         if(about != undefined && about != null) {
-            requestingAccount.about == about;
+            requestingAccount.about = about;
         }
 
         let name = req.body.name;
         if(name != undefined && name != null) {
-            requestingAccount.name == name;
+            requestingAccount.name = name;
         }
 
         let password = req.body.password;
