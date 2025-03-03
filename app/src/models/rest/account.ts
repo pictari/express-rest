@@ -1,5 +1,8 @@
 import Joi from "joi";
 
+/**
+ * Data interface used to hold account-related properties from POST/PUT requests.
+ */
 export interface Account {
     email?:string,
     name?:string,
@@ -8,6 +11,13 @@ export interface Account {
     userType?:number
 }
 
+/**
+ * Strictly validates accounts to be REGISTERED, and is therefore limited in information
+ * it accepts. Use ValidateAccountPut for changing account settings.
+ * 
+ * @param account The rest/Account object (not the TypeORM data class) with values filled only in email, name and password fields.
+ * @returns ValidationResult that contains an error message only if validation fails.
+ */
 export const ValidateAccountPost = (account: Account) => {
     const validator = Joi.object<Account>({
         email: Joi.string().email().required(),

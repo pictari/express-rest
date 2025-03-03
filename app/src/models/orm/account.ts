@@ -3,6 +3,10 @@ import { Entity, Column, PrimaryColumn, Index } from "typeorm";
 // the properties in this entity are explicitly defined as nullable
 // (or not) in order to get a consistent result in case TypeORM
 // sometimes parses "| null" as "always make this entity nullable"
+
+/**
+ * A TypeORM data object to hold and define an Account record from the database.
+ */
 @Entity()
 export class Account {
     @PrimaryColumn({
@@ -12,8 +16,7 @@ export class Account {
     })
     uuid!: string | null;
 
-    // fun fact: maximum length of email is a hotly debated topic
-    // people can't decide if it's 254 or 320
+    // max length of email is possibly 320 characters but I'm finding conflicting info
     @Column({
         type: "text",
         nullable: true,
@@ -82,6 +85,9 @@ export class Account {
     totalFriends!: number | null;
 }
 
+/**
+ * Enum that holds the current privilege levels we recognize, from admin (highest) to none (lowest).
+ */
 export enum UserType {
     admin,
     moderator,

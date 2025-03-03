@@ -1,11 +1,12 @@
 import { Entity, Column, PrimaryColumn, OneToOne, JoinColumn } from "typeorm";
 import { Account } from "./account";
 
+/**
+ * A TypeORM data object to hold and define a Verification record from the database. Has a
+ * 1-1 relationship with Account.
+ */
 @Entity()
 export class Verification {
-    // these two don't look like they're going to work
-    // but they made typeORM opinionated to sImPliFy tHe iNtErNaLs
-    // ???
     @PrimaryColumn({
         type: "uuid",
         nullable: false,

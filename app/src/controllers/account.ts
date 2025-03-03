@@ -5,14 +5,13 @@ import { Verification } from "../models/orm/verification";
 import { Friendship } from "../models/orm/friendship";
 import { Block } from "../models/orm/block";
 import { PendingFriendship } from "../models/orm/pending_friendship";
-import Joi, { date } from "joi";
+import Joi from "joi";
 import { ValidateAccountPost, ValidateAccountPut } from "../models/rest/account";
 import argon2 from "argon2";
 import { v4 } from "uuid";
-import { ILike, Like } from "typeorm";
+import { Like } from "typeorm";
 
 const accountRepo = AccountDataSource.getRepository(Account);
-const verificationRepo = AccountDataSource.getRepository(Verification);
 const friendshipRepo = AccountDataSource.getRepository(Friendship);
 const pendingRepo = AccountDataSource.getRepository(PendingFriendship);
 const blockRepo = AccountDataSource.getRepository(Block);
