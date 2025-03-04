@@ -13,10 +13,13 @@ dotenv.config();
 const PORT = 3000;
 const app: Application = express();
 
+//TODO: limit CORS once we're out of testing phase
 app.use(cors());
+
 app.use(morgan("tiny"));
 app.use(express.json());
 
+// register all endpoint routers
 app.use('/rooms', roomsRouter);
 app.use('/account', accountRouter);
 app.use('/verification', verificationRouter);

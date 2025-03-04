@@ -8,6 +8,9 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+/**
+ * Configured database connection using information from secrets.
+ */
 export const AccountDataSource = new DataSource({
     type: "mariadb",
     host: process.env.DBHOST,
