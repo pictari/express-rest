@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const client : DynamoDBClient = new DynamoDBClient({
+    region: process.env.DYNAMOREGION as string,
     credentials: {
         accessKeyId: process.env.PUBLICACCESSKEY as string,
         secretAccessKey: process.env.SECRETACCESSKEY as string
