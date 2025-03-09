@@ -1,8 +1,15 @@
 import { Request, Response } from "express";
 import { DynamoDBClient, GetItemCommand, ScanCommand } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
+import dotenv from "dotenv";
 
-const client : DynamoDBClient = new DynamoDBClient({});
+dotenv.config();
+
+const client : DynamoDBClient = new DynamoDBClient({
+    credentials: {
+        accessKeyId: process.env.PUBLICACCESSKEY as string,
+        secretAccessKey: process.env.SECRETACCESSKEY as string
+    }
+});
 
 export const getRoomsList = async (req: Request, res: Response) =>
 {
