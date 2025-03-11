@@ -8,6 +8,14 @@ const verificationRepo = AccountDataSource.getRepository(Verification);
 
 // similar to accepting friendships, there's just no better HTTP method for this
 // purpose
+
+/**
+ * Sets the verification status to 1 of an account associated with the followed verification link.
+ * 
+ * @param req All contents of a HTTP request.
+ * @param res The response to build/send to the end user.
+ * @returns Returns early if the verification address can't be found or the account was deleted since.
+ */
 export const getVerification = async (req: Request, res: Response) => {
     try {
         let givenAddress = req.params.address;

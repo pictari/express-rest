@@ -19,10 +19,16 @@ const blockRepo = AccountDataSource.getRepository(Block);
 // used for verification links
 const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_";
 
-// use case is profile page
+/**
+ * Retrieves data for display on the public account profile page.
+ * 
+ * @param req All contents of a HTTP request.
+ * @param res The response to build/send to the end user.
+ */
 export const getPublicAccountStatistics = async (req: Request, res: Response) => {
     let requestedUuid = req.params.uuid;
     let matchingAccount = await accountRepo.find({
+        // refine select to ONLY public data
         select: {
             userType: true,
             name: true,
@@ -45,10 +51,16 @@ export const getPublicAccountStatistics = async (req: Request, res: Response) =>
     }
 }
 
-// use case is room and friend listings
+/**
+ * Retrieves data for display on the server/friend listings.
+ * 
+ * @param req All contents of a HTTP request.
+ * @param res The response to build/send to the end user.
+ */
 export const getPublicAccountShortened = async (req: Request, res: Response) => {
     let requestedUuid = req.params.uuid;
     let matchingAccount = await accountRepo.find({
+        // refine select to the smallest subset of data necessary
         select: {
             userType: true,
             name: true
@@ -66,10 +78,16 @@ export const getPublicAccountShortened = async (req: Request, res: Response) => 
     }
 }
 
-// use case is personal settings
+/**
+ * Retrieves private data for display within the owner's settings.
+ * 
+ * @param req All contents of a HTTP request.
+ * @param res The response to build/send to the end user.
+ */
 export const getPersonalAccountInfo = async (req: Request, res: Response) => {
     let requestedUuid = req.params.uuid;
     let personalInfo = await accountRepo.find({
+        // currently, the only private data we have is email
         select: {
             email: true
         },
@@ -86,7 +104,12 @@ export const getPersonalAccountInfo = async (req: Request, res: Response) => {
     }
 }
 
-// use case is profile page (both for visitors and the owner)
+/**
+ * Retrieves a public friend list for an account.
+ * 
+ * @param req All contents of a HTTP request.
+ * @param res The response to build/send to the end user.
+ */
 export const getAccountFriends = async (req: Request, res: Response) => {
     let requestedUuid = req.params.uuid;
 
@@ -111,7 +134,12 @@ export const getAccountFriends = async (req: Request, res: Response) => {
     }
 }
 
-// use case is profile page (only for the owner)
+/**
+ * Retrieves a list of all pending friendship requests on either side (either as a sender or receiver)
+ * 
+ * @param req All contents of a HTTP request.
+ * @param res The response to build/send to the end user.
+ */
 export const getAccountPendingFriendships = async (req: Request, res: Response) => {
     let requestedUuid = req.params.uuid;
 
@@ -139,7 +167,12 @@ export const getAccountPendingFriendships = async (req: Request, res: Response) 
     }
 }
 
-// use case is profile page (only for the owner)
+/**
+ * Retrieves a list of all account UUIDs blocked by this account.
+ * 
+ * @param req All contents of a HTTP request.
+ * @param res The response to build/send to the end user.
+ */
 export const getAccountBlockedList = async (req: Request, res: Response) => {
     let requestedUuid = req.params.uuid;
 
@@ -162,17 +195,24 @@ export const getAccountBlockedList = async (req: Request, res: Response) => {
     }
 }
 
-// use case is a search bar for adding friends/blocks
+/**
+ * Retrieves a list of accounts with matching names to be used in search queries.
+ * 
+ * @param req All contents of a HTTP request.
+ * @param res The response to build/send to the end user.
+ */
 export const getAccountSearchByName = async (req: Request, res: Response) => {
     let requestedName = req.params.name;
 
     let accounts = await accountRepo.find({
         take: 10,
         select: {
+            // the name is selected for the display, the UUID is selected for making any further requests
             uuid: true,
             name: true
         },
         where: {
+            // search with a wildcard
             name: Like(`%${requestedName}%`)
         }
     }
@@ -185,11 +225,17 @@ export const getAccountSearchByName = async (req: Request, res: Response) => {
     }
 }
 
-// general endpoint for account creation
+/**
+ * General endpoint used in creating accounts.
+ * 
+ * @param req All contents of a HTTP request.
+ * @param res The response to build/send to the end user.
+ */
 export const postNewAccount = async (req: Request, res: Response) => {
     try {
         let accountToCreate = req.body;
 
+        // check that all the data being passed in the body is valid (conforms to requirements outlined in the REST Account object file)
         let validationResult: Joi.ValidationResult = ValidateAccountPost(accountToCreate);
 
         if (validationResult.error) {
@@ -197,19 +243,21 @@ export const postNewAccount = async (req: Request, res: Response) => {
             return;
         }
 
-
+        // try to find an existing account by email; if succeeds, do not allow the creation to proceed
         let emailExists = await accountRepo.findOneBy({ email: accountToCreate.email });
         if (emailExists != null) {
             res.status(400).send(`This email is already in use.`);
             return;
         }
 
+        // try to find an existing account by name; if succeeds, do not allow the creation to proceed
         let nameExists = await accountRepo.findOneBy({ name: accountToCreate.name });
         if (nameExists != null) {
             res.status(400).send(`This name is already in use.`);
             return;
         }
 
+        // begin creating new accounts and associated verification entity
         let account: Account = new Account();
         let verification: Verification = new Verification();
 
@@ -220,6 +268,8 @@ export const postNewAccount = async (req: Request, res: Response) => {
 
         account.name = accountToCreate.name;
         account.password = await argon2.hash(accountToCreate.password);
+        account.email = accountToCreate.email;
+        // default data
         account.verified = false;
         account.userType = UserType.none;
         account.dateGenerated = new Date();
@@ -227,14 +277,16 @@ export const postNewAccount = async (req: Request, res: Response) => {
         account.totalFriends = 0;
         account.totalRating = 0;
         account.verified = false;
-        account.email = accountToCreate.email;
 
+        // try to create the account in the entity manager
         await AccountDataSource.manager.save(account);
 
+        // generate a verification based on the newly created account
         verification.accountUuid = newUuid;
         verification.timeGenerated = new Date();
         verification.address = randomStringCreator(32);
 
+        // try to create the verification in the entity manager
         await AccountDataSource.manager.save(verification);
         //REMOVE VERIFICATION LINK FROM MESSAGE IN FINAL VERSION!! THIS IS JUST FOR TESTING IN DEV!
         res.status(201).send(`Registration succeeded. Please verify your email. ${verification.address}`);
@@ -250,14 +302,19 @@ export const postNewAccount = async (req: Request, res: Response) => {
     }
 }
 
-// self explanatory
+/**
+ * Adds a new pending friend request to the database
+ * 
+ * @param req All contents of a HTTP request.
+ * @param res The response to build/send to the end user.
+ */
 export const postNewFriendRequest = async (req: Request, res: Response) => {
     let requesterUuid = req.params.uuid;
     let requestedUuid = req.params.uuid2;
 
     // does the requester UUID even exist?
     // these checks also double in function as fetching the needed accounts to
-    // create a request
+    // create a request, and also to conform to strict TypeScript validation
     let verifyExistence = await accountRepo.findOneBy({ uuid: requesterUuid });
 
     if (verifyExistence == null) {
@@ -277,6 +334,7 @@ export const postNewFriendRequest = async (req: Request, res: Response) => {
     toSort.sort();
     let friends = await friendshipRepo.findOneBy({ accountUuid: toSort[0], account2Uuid: toSort[1] });
 
+    // if it does, don't proceed
     if (friends != null) {
         res.status(400).send(`This friendship already exists.`);
         return;
@@ -297,6 +355,7 @@ export const postNewFriendRequest = async (req: Request, res: Response) => {
         ]
     });
 
+    // if it does, don't proceed
     if (requests.length != 0) {
         res.status(400).send(`A request for this friendship already exists.`);
         return;
@@ -318,6 +377,7 @@ export const postNewFriendRequest = async (req: Request, res: Response) => {
         return;
     }
 
+    // if all passes, create the request and save to the entity manager
     const pendingRequest = new PendingFriendship();
     pendingRequest.account = verifyExistence;
     pendingRequest.account2 = verifyExistence2;
@@ -327,14 +387,19 @@ export const postNewFriendRequest = async (req: Request, res: Response) => {
     return;
 }
 
-// self explanatory
+/**
+ * Adds a new block (without a requset) to the database
+ * 
+ * @param req All contents of a HTTP request.
+ * @param res The response to build/send to the end user.
+ */
 export const postNewBlock = async (req: Request, res: Response) => {
     let requesterUuid = req.params.uuid;
     let requestedUuid = req.params.uuid2;
 
     // does the requester UUID even exist?
     // these checks also double in function as fetching the needed accounts to
-    // create a request
+    // create a request, and also to conform to strict TypeScript validation
     let verifyExistence = await accountRepo.findOneBy({ uuid: requesterUuid })
 
     if (verifyExistence == null) {
@@ -358,6 +423,7 @@ export const postNewBlock = async (req: Request, res: Response) => {
         return;
     }
 
+    // if all passes, create the new block
     const newBlock = new Block();
     newBlock.account = verifyExistence;
     newBlock.account2 = verifyExistence2;
@@ -377,6 +443,7 @@ export const postNewBlock = async (req: Request, res: Response) => {
                 console.log(value);
             });
 
+        // also subtract from friend statistics upon removal
         if (verifyExistence.totalFriends != null) {
             verifyExistence.totalFriends -= 1;
         }
@@ -414,16 +481,24 @@ export const postNewBlock = async (req: Request, res: Response) => {
             });
     }
 
+    // after all passes, save to entity manager
     await AccountDataSource.manager.save(newBlock);
     res.status(201).send(`Blocked user with ID ${requestedUuid}.`);
 }
 
-// there is no better HTTP verb than POST for accepting friend requests
+/**
+ * Acknowledge and create a new friendship from an accepted request. There is no better HTTP verb for this.
+ * 
+ * @param req All contents of a HTTP request.
+ * @param res The response to build/send to the end user.
+ */
 export const postAcceptRequest = async (req: Request, res: Response) => {
     let requesterUuid = req.params.uuid;
     let requestedUuid = req.params.uuid2;
 
     // does the requester UUID even exist?
+    // these checks also double in function as fetching the needed accounts to
+    // create a request, and also to conform to strict TypeScript validation
     let verifyExistence = await accountRepo.findOneBy({ uuid: requesterUuid });
 
     if (verifyExistence == null) {
@@ -450,19 +525,23 @@ export const postAcceptRequest = async (req: Request, res: Response) => {
         }
     });
 
+    // if not, exit
     if (requests.length == 0) {
         res.status(404).send(`There is no such request for a friendship.`);
         return;
     }
 
+    // remove the request as it's accepted
     await AccountDataSource.manager.remove(requests[0]);
 
+    // create a new friendship by sorting the two UUIDs
     let toSort = [requesterUuid, requestedUuid];
     toSort.sort();
     const friendship = new Friendship();
     friendship.accountUuid = toSort[0];
     friendship.account2Uuid = toSort[1];
 
+    // save to database and also update statistics for both accounts
     await AccountDataSource.manager.save(friendship);
 
     if (verifyExistence.totalFriends == null) {
@@ -483,12 +562,17 @@ export const postAcceptRequest = async (req: Request, res: Response) => {
     res.status(201).send(`Created a friendship.`);
 }
 
-// change settings for account
-// complete email checks when the account create route is done
+/**
+ * Change an account's settings.
+ * 
+ * @param req All contents of a HTTP request.
+ * @param res The response to build/send to the end user.
+ */
 export const putNewAccountSettings = async (req: Request, res: Response) => {
     try {
         let newSettings = req.body;
 
+        // validate new incoming data as per the REST Account file
         let validationResult: Joi.ValidationResult = ValidateAccountPut(newSettings);
 
         if (validationResult.error) {
@@ -499,6 +583,8 @@ export const putNewAccountSettings = async (req: Request, res: Response) => {
         let requesterUuid = req.params.uuid;
 
         // does the requester UUID even exist?
+        // these checks also double in function as fetching the needed accounts to
+        // create a request, and also to conform to strict TypeScript validation
         let requestingAccount = await accountRepo.findOneBy({ uuid: requesterUuid });
 
         if (requestingAccount == null) {
@@ -506,19 +592,24 @@ export const putNewAccountSettings = async (req: Request, res: Response) => {
             return;
         }
 
+        // first evaluate new email, and if the email changes, ignore any further settings changes 
         let email = req.body.email;
         if (email != undefined && email != null) {
+            // check that the email isn't already being used by someone else
             let emailExists = await accountRepo.findOneBy({ email: email });
             if (emailExists != null) {
                 res.status(400).send(`This email is already in use.`);
                 return;
             }
+
+            // make a new verification for the new email
             let verification: Verification = new Verification();
             verification.accountUuid = requestingAccount.uuid;
             verification.timeGenerated = new Date();
             verification.address = randomStringCreator(32);
 
             await AccountDataSource.manager.save(verification);
+            // remove verification status
             requestingAccount.email = email;
             requestingAccount.verified = false;
 
@@ -529,17 +620,14 @@ export const putNewAccountSettings = async (req: Request, res: Response) => {
             return;
         }
 
+        // can't change any settings (except email) unless the account is verified
         if (!requestingAccount.verified) {
             await accountRepo.save(requestingAccount);
             res.status(403).send('You cannot change any further settings until you verify your email.');
             return;
         }
 
-        let about = req.body.about;
-        if (about != undefined && about != null) {
-            requestingAccount.about = about;
-        }
-
+        // names must also be unique
         let name = req.body.name;
         if (name != undefined && name != null) {
             let nameExists = await accountRepo.findOneBy({ name: name });
@@ -550,11 +638,17 @@ export const putNewAccountSettings = async (req: Request, res: Response) => {
             requestingAccount.name = name;
         }
 
+        let about = req.body.about;
+        if (about != undefined && about != null) {
+            requestingAccount.about = about;
+        }
+
         let password = req.body.password;
         if (password != undefined && password != null) {
             requestingAccount.password = await argon2.hash(password);
         }
 
+        // save new changes
         await accountRepo.save(requestingAccount);
         res.status(204).send('Changed account settings.');
     } catch (error) {
@@ -568,12 +662,19 @@ export const putNewAccountSettings = async (req: Request, res: Response) => {
     }
 }
 
-// effectively declines the incoming request
+/**
+ * Declines (deletes) an incoming friendship request from the receiver's side.
+ * 
+ * @param req All contents of a HTTP request.
+ * @param res The response to build/send to the end user.
+ */
 export const deleteRequest = async (req: Request, res: Response) => {
     let requesterUuid = req.params.uuid;
     let requestedUuid = req.params.uuid2;
 
     // does the requester UUID even exist?
+    // these checks also double in function as fetching the needed accounts to
+    // create a request, and also to conform to strict TypeScript validation
     let verifyExistence = await accountRepo.findOneBy({ uuid: requesterUuid })
 
     if (verifyExistence == null) {
@@ -600,6 +701,7 @@ export const deleteRequest = async (req: Request, res: Response) => {
         }
     });
 
+    // if not, exit
     if (requests.length == 0) {
         res.status(404).send(`There is no such request for a friendship.`);
         return;
@@ -610,12 +712,19 @@ export const deleteRequest = async (req: Request, res: Response) => {
     res.status(204).send(`Rejected the friendship request.`);
 }
 
-// deletes the two way relationship
+/**
+ * Deletes a friendship from either side of the relationship.
+ * 
+ * @param req All contents of a HTTP request.
+ * @param res The response to build/send to the end user.
+ */
 export const deleteFriend = async (req: Request, res: Response) => {
     let requesterUuid = req.params.uuid;
     let requestedUuid = req.params.uuid2;
 
     // does the requester UUID even exist?
+    // these checks also double in function as fetching the needed accounts to
+    // create a request, and also to conform to strict TypeScript validation
     let verifyExistence = await accountRepo.findOneBy({ uuid: requesterUuid })
 
     if (verifyExistence == null) {
@@ -630,6 +739,7 @@ export const deleteFriend = async (req: Request, res: Response) => {
         return;
     }
 
+    // try to find the friendship; if it already exists, exit
     let toSort = [requesterUuid, requestedUuid];
     toSort.sort();
     let friends = await friendshipRepo.findOneBy({ accountUuid: toSort[0], account2Uuid: toSort[1] });
@@ -639,6 +749,7 @@ export const deleteFriend = async (req: Request, res: Response) => {
         return;
     }
 
+    // remove friendship and update statistics for both accounts
     await AccountDataSource.manager.remove(friends);
 
     if (verifyExistence.totalFriends != null) {
@@ -655,12 +766,19 @@ export const deleteFriend = async (req: Request, res: Response) => {
     res.status(204).send(`Deleted the friendship.`);
 }
 
-// deletes the two way relationship
+/**
+ * Deletes a friendship from the side of the instigator.
+ * 
+ * @param req All contents of a HTTP request.
+ * @param res The response to build/send to the end user.
+ */
 export const deleteBlock = async (req: Request, res: Response) => {
     let requesterUuid = req.params.uuid;
     let requestedUuid = req.params.uuid2;
 
     // does the requester UUID even exist?
+    // these checks also double in function as fetching the needed accounts to
+    // create a request, and also to conform to strict TypeScript validation
     let verifyExistence = await accountRepo.findOneBy({ uuid: requesterUuid })
 
     if (verifyExistence == null) {
@@ -675,6 +793,7 @@ export const deleteBlock = async (req: Request, res: Response) => {
         return;
     }
 
+    // try to find the block; if it exists, do nothing
     let block = await blockRepo.findOneBy({ accountUuid: requesterUuid, account2Uuid: requestedUuid });
 
     if (block == null) {
@@ -687,6 +806,12 @@ export const deleteBlock = async (req: Request, res: Response) => {
     res.status(204).send(`Removed the block.`);
 }
 
+/**
+ * Internal function used in generating a random string based off of an already existing charset.
+ * 
+ * @param length The number of characters that the function should output.
+ * @returns A randomly generated string of characters based on charset and the passed-in length.
+ */
 function randomStringCreator(length: number) {
     let newString = '';
 
