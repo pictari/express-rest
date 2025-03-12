@@ -47,7 +47,7 @@ export const getRoomsList = async (req: Request, res: Response) =>
         // use DynamoDB Scan as the # of rooms retrieved doesn't matter
         let response = await client.send(new ScanCommand(input));
         let items = response.Items;
-        if(items == null || items == undefined) {
+        if(items == null || items == undefined || items.length < 1) {
             // 404 here doesn't indicate an issue for either server or client
             res.status(404).send(`Did not find any active public servers.`);
         } else {
@@ -95,7 +95,7 @@ export const getRoomDetails  = async (req: Request, res: Response) =>
         // option for individual retrieval
         let response = await client.send(new GetItemCommand(input));
         let item = response.Item;
-        if(item == null || item == undefined) {
+        if(item == null || item == undefined ) {
             res.status(404).send(`No room with ID ${roomId} exists.`);
         } else {
             res.status(200).json(item);
@@ -140,7 +140,7 @@ export const getPrivateRoomDetails  = async (req: Request, res: Response) =>
             // but due to the nature of GSIs, this kind of Scan shouldn't be unpredictable
             let response = await client.send(new ScanCommand(input));
 
-            if(response == null || response == undefined || response.Items == undefined || response.Items == null) {
+            if(response == null || response == undefined || response.Items == undefined || response.Items == null || response.Items.length < 1) {
                 res.status(404).send(`No room with key ${roomKey} exists.`);
             } else {
                 // it retrieves an array by default so just choose the first object
