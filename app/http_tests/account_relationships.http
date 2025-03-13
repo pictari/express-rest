@@ -1,0 +1,126 @@
+@endpoint = http://localhost:3000/account
+@endpointAuth = http://localhost:3000/login
+# both of these are verified
+@accountUuid = INSERT-ACCOUNT-UUID
+@accountUuid2 = INSERT-SECOND-ACCOUNT-UUID
+@accessToken = {{auth.response.body.accessToken}}
+@accessToken2 = {{auth2.response.body.accessToken}}
+@searchedName = CO
+
+# depending on the order that these tests are executed, there can be different outcomes
+# POST and DELETE requests have a number associated with them, and below are some orders to execute them in
+# the following are executed under assumption that NO relationship exists between the two accounts:
+# calling 2, 4, 5, or 6 without any of the previous calls = 404
+# calling 1, 2, 4 = valid; both accounts get their friend stat updated on 2, and it's decremented again on 4
+# calling 1, 6 = valid; no statistics are ever changed
+# calling 1, 6, 2 = 404; request was deleted on second step
+# calling 3, 1 = 400; one of the accounts is blocked
+# calling 1, 2, 3 = valid; friendship automatically gets destroyed when a block is made and statistics decremented
+# calling 1, 3 = valid; request automatically gets terminated when a block is made
+
+# an account's list of confirmed friends is always public
+# returns 200 with a list of friends; 404 if there are none or player doesn't exist
+GET {{endpoint}}/{{accountUuid}}/friends HTTP/1.1
+content-type: application/json
+
+###
+
+# most of the following routes are protected with auth and verification so login with an already verified account
+# @name auth
+POST {{endpointAuth}} HTTP/1.1
+content-type: application/json
+
+{ 
+  "email": "insert-valid-email",
+  "password": "passwordlicious"
+}
+###
+
+# @name auth2
+POST {{endpointAuth}} HTTP/1.1
+content-type: application/json
+
+{ 
+  "email": "insert-other-valid-email",
+  "password": "passwordlicious"
+}
+###
+
+# an account's list of pending and sent requests is private, so auth needed
+# returns 200 with a list of pending/sent requests; 404 if there are none
+GET {{endpoint}}/{{accountUuid}}/friends/pending HTTP/1.1
+content-type: application/json
+Authorization: Bearer {{accessToken}}
+
+###
+
+# an account's list of blocks (one-sided) is private, so auth needed
+# returns 200 with a list of blocks initiated by that account; 404 if there are none
+GET {{endpoint}}/{{accountUuid}}/blocks HTTP/1.1
+content-type: application/json
+Authorization: Bearer {{accessToken}}
+
+###
+
+# a list of accounts that (at least partially) match the entered name, JWT required to prevent stress on DB from those who don't need to use this feature
+# no verification, though
+# returns 200 with a list of accounts with matching names; 404 if there are none
+GET {{endpoint}}/{{accountUuid}}/search/{{searchedName}} HTTP/1.1
+content-type: application/json
+Authorization: Bearer {{accessToken}}
+
+###
+
+# 1 - send a friend request
+# returns 404 if the other person isn't found, 400 if there's a conflict with relationships (extant friendship/request, or a block exists on at least one side), 201 if successful
+# sender is the first UUID
+POST {{endpoint}}/{{accountUuid}}/friends/{{accountUuid2}} HTTP/1.1
+content-type: application/json
+Authorization: Bearer {{accessToken}}
+
+###
+
+# 2 - accept friend requst
+# returns 404 if the other person or request isn't found, 400 if a friendship already exists, 201 if successful
+# receiver is the first UUID, and only the receiver can accept the requst
+POST {{endpoint}}/{{accountUuid2}}/friends/{{accountUuid}} HTTP/1.1
+content-type: application/json
+Authorization: Bearer {{accessToken2}}
+
+###
+
+# 3 - create block
+# returns 404 if the other person or request isn't found, 400 if a block already exists, 201 if successful
+# instigator is the first UUID; will delete any existing friendships and requests between the two
+POST {{endpoint}}/{{accountUuid}}/blocks/{{accountUuid2}} HTTP/1.1
+content-type: application/json
+Authorization: Bearer {{accessToken}}
+
+###
+
+# 4 - delete friendship
+# returns 404 if the other person, request or friendship isn't found, 204 if successful
+# the result is the same no matter the order that the UUIDs are put in
+DELETE {{endpoint}}/{{accountUuid}}/friends/{{accountUuid2}} HTTP/1.1
+content-type: application/json
+Authorization: Bearer {{accessToken}}
+
+###
+
+# 5 - delete block
+# returns 404 if the other person, request or block isn't found, 204 if successful
+# instigator is the first UUID
+DELETE {{endpoint}}/{{accountUuid}}/blocks/{{accountUuid2}} HTTP/1.1
+content-type: application/json
+Authorization: Bearer {{accessToken}}
+
+###
+
+# 6 - delete request
+# returns 404 if the other person, request or request isn't found, 204 if successful
+# the receiver is the first UUID
+DELETE {{endpoint}}/{{accountUuid2}}/friends/{{accountUuid}} HTTP/1.1
+content-type: application/json
+Authorization: Bearer {{accessToken2}}
+
+###

@@ -48,10 +48,9 @@ content-type: application/json
 
 ###
 
-# the UUID is then retrieved through a login attempt
-
+# the UUID is then retrieved through a JWT from a login attempt
 # @name auth
-GET {{endpointAuth}} HTTP/1.1
+POST {{endpointAuth}} HTTP/1.1
 content-type: application/json
 
 { 
@@ -59,7 +58,28 @@ content-type: application/json
   "password": "passwordlicious"
 }
 
+###
 # however, due to the limitations of the HTTP tool, the JWT cannot be decoded in here so decode it yourself (i.e. in JWT.io) and replace the at-accountUuid variable
+
+# basic account info is immediately made public (you don't need authorization for it)
+# returns 200 with summarized account data (used to show a player within a room); 404 if player doesn't exist
+GET {{endpoint}}/{{accountUuid}} HTTP/1.1
+content-type: application/json
+
+###
+
+# returns 200 with full PUBLIC data; 404 if player doesn't exist
+GET {{endpoint}}/{{accountUuid}}/profile HTTP/1.1
+content-type: application/json
+
+###
+# everything after this point additionally needs authorization (i.e. admin or being an owner)
+# returns 200 with PRIVATE account data (except blocks); 403 if unauthenticated
+GET {{endpoint}}/{{accountUuid}}/profile/settings HTTP/1.1
+content-type: application/json
+Authorization: Bearer {{accessToken}}
+
+###
 
 # BEFORE verifying, it's valid to change your email at any time
 PUT {{endpoint}}/{{accountUuid}}/profile/settings HTTP/1.1
@@ -83,3 +103,14 @@ Authorization: Bearer {{accessToken}}
 ###
 
 # before proceeding, verify the new account yourself - the REST API cannot send you the verification link itself as it would defeat the purpose of email verification
+
+# this should work now, returning a 204
+# PUT follows the same validation rules as POST, except more fields are permitted and all are optional
+PUT {{endpoint}}/{{accountUuid}}/profile/settings HTTP/1.1
+content-type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+    "about":"hello to you too"
+}
+###

@@ -110,7 +110,7 @@ export const verifyOwner = async (
     const jwtRole = res.locals?.payload?.type;
     const requestedId = req.params.uuid;
     const userId = res.locals?.payload?.uuid;
-    if (jwtRole == 0 || jwtRole == 1 || userId == requestedId) {
+    if (jwtRole == UserType.admin || jwtRole == UserType.moderator || userId == requestedId) {
         next();
     }
     else {

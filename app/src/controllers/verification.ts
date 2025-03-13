@@ -7,7 +7,7 @@ const accountRepo = AccountDataSource.getRepository(Account);
 const verificationRepo = AccountDataSource.getRepository(Verification);
 
 // similar to accepting friendships, there's just no better HTTP method for this
-// purpose
+// purpose as this link needs to be followed IN BROWSER when clicked on in an email
 
 /**
  * Sets the verification status to true of an account associated with the followed verification link, and then deletes the link.

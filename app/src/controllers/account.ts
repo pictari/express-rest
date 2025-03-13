@@ -13,6 +13,7 @@ import { Like } from "typeorm";
 
 const accountRepo = AccountDataSource.getRepository(Account);
 const friendshipRepo = AccountDataSource.getRepository(Friendship);
+const verificationRepo = AccountDataSource.getRepository(Verification);
 const pendingRepo = AccountDataSource.getRepository(PendingFriendship);
 const blockRepo = AccountDataSource.getRepository(Block);
 
@@ -419,7 +420,7 @@ export const postNewBlock = async (req: Request, res: Response) => {
 
 
     // check that block doesn't already exist
-    let blocked = await blockRepo.findOneBy({ accountUuid: requesterUuid });
+    let blocked = await blockRepo.findOneBy({ accountUuid: requesterUuid, account2Uuid: requestedUuid });
 
     if (blocked != null) {
         res.status(400).send(`This account was already blocked.`);
@@ -605,21 +606,36 @@ export const putNewAccountSettings = async (req: Request, res: Response) => {
                 return;
             }
 
-            // make a new verification for the new email
+            let extantVerification = await verificationRepo.findOneBy({accountUuid: requesterUuid});
             let verification: Verification = new Verification();
-            verification.accountUuid = requestingAccount.uuid;
-            verification.timeGenerated = new Date();
-            verification.address = randomStringCreator(32);
 
-            await AccountDataSource.manager.save(verification);
+            // make a new verification for the new email
+            // use an extant verification record if it already exists
+            if(extantVerification != null) {
+                extantVerification.timeGenerated = new Date();
+                extantVerification.address = randomStringCreator(32);
+                await verificationRepo.save(verification);
+            } else {
+                verification.accountUuid = requestingAccount.uuid;
+                verification.timeGenerated = new Date();
+                verification.address = randomStringCreator(32);
+                await AccountDataSource.manager.save(verification);
+            }
+
             // remove verification status
             requestingAccount.email = email;
             requestingAccount.verified = false;
+            
 
             await accountRepo.save(requestingAccount);
 
-            //REMOVE VERIFICATION LINK FROM MESSAGE IN FINAL VERSION!! THIS IS JUST FOR TESTING IN DEV! 
-            res.status(200).send(`Changed email. No other settings are changed; retry when your email is verified. Verification link: ${verification.address}`);
+            // these CAN'T go into the above IF statements in order to ensure that the account entity was properly updated before anything is sent back
+            //TODO: REMOVE VERIFICATION LINK FROM MESSAGE IN FINAL VERSION!! THIS IS JUST FOR TESTING IN DEV! 
+            if(extantVerification != null) {
+                res.status(200).send(`Changed email. No other settings are changed; retry when your email is verified. Verification link: ${extantVerification.address}`);
+            } else {
+                res.status(200).send(`Changed email. No other settings are changed; retry when your email is verified. Verification link: ${verification.address}`);
+            }
             return;
         }
 
