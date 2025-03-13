@@ -20,7 +20,8 @@ export class Verification {
 
     @Column({
         type: "text",
-        nullable: true
+        nullable: true,
+        unique: true
     })
     address!: string | null;
 

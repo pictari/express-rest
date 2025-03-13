@@ -1,0 +1,85 @@
+@endpoint = http://localhost:3000/account
+@endpointAuth = http://localhost:3000/login
+@accountUuid = INSERT-ACCOUNT-UUID
+@accessToken = {{auth.response.body.accessToken}}
+
+
+# walkthrough for tests related to accounts, particularly account settings (except inter-account relationships)
+
+# account creation endpoint tests
+# this one will fail with a 400 because only email, name, password are acceptable when creating a new account
+POST {{endpoint}} HTTP/1.1
+content-type: application/json
+
+{ "email":"test@fakemail.com",
+  "about": "I suck :(",
+  "name": "Failure",
+  "password": "passwordlicious"
+}
+
+###
+# this one will fail with a 400 because the data sent in fails validation
+POST {{endpoint}} HTTP/1.1
+content-type: application/json
+
+{ "email":"NotActuallyEmail",
+  "name": "Failure",
+  "password": "passwordlicious"
+}
+###
+# ditto
+POST {{endpoint}} HTTP/1.1
+content-type: application/json
+
+{ "email":"test@fakemail.com",
+  "name": "INVALIDNAMETOOLONG&INVALIDSYMBOL",
+  "password": "passwordlicious"
+}
+
+###
+# returns 201 if successful; 400 if email/name is already in use; 500 if server error
+POST {{endpoint}} HTTP/1.1
+content-type: application/json
+
+{ "email":"INSERT-VALID-EMAIL",
+  "name": "AccCreationTest",
+  "password": "passwordlicious"
+}
+
+###
+
+# the UUID is then retrieved through a login attempt
+
+# @name auth
+GET {{endpointAuth}} HTTP/1.1
+content-type: application/json
+
+{ 
+  "email": "insert-valid-email",
+  "password": "passwordlicious"
+}
+
+# however, due to the limitations of the HTTP tool, the JWT cannot be decoded in here so decode it yourself (i.e. in JWT.io) and replace the at-accountUuid variable
+
+# BEFORE verifying, it's valid to change your email at any time
+PUT {{endpoint}}/{{accountUuid}}/profile/settings HTTP/1.1
+content-type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+    "email":"INSERT-ANOTHER-VALID-EMAIL"
+}
+
+###
+# ...but anything else will result in a 403
+PUT {{endpoint}}/{{accountUuid}}/profile/settings HTTP/1.1
+content-type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+    "about":"hello"
+}
+
+###
+
+# before proceeding, verify the new account yourself - the REST API cannot send you the verification link itself as it would defeat the purpose of email verification

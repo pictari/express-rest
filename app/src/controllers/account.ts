@@ -17,6 +17,7 @@ const pendingRepo = AccountDataSource.getRepository(PendingFriendship);
 const blockRepo = AccountDataSource.getRepository(Block);
 
 // used for verification links
+// each address has a 1 in 64^32 chance to generate so conflicts are unlikely
 const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_";
 
 /**
@@ -298,7 +299,7 @@ export const postNewAccount = async (req: Request, res: Response) => {
         else {
             console.log(`Error: ${error}`);
         }
-        res.status(400).send(`Couldn't create new account.`);
+        res.status(500).send(`Couldn't create new account.`);
     }
 }
 
@@ -363,16 +364,18 @@ export const postNewFriendRequest = async (req: Request, res: Response) => {
 
     // check for blocks, since blocked players (on either side) can't send
     // requests to each other
-    let blocked = await blockRepo.findOneBy({ accountUuid: requesterUuid });
+    let blocked = await blockRepo.find({
+        select: {
+            accountUuid: true,
+            account2Uuid: true
+        },
+        where: [
+            { accountUuid: requesterUuid, account2Uuid: requestedUuid },
+            { accountUuid: requestedUuid, account2Uuid: requesterUuid }
+        ]
+    });
 
-    if (blocked != null) {
-        res.status(400).send(`A block exists between the two accounts.`);
-        return;
-    }
-
-    let blocked2 = await blockRepo.findOneBy({ accountUuid: requestedUuid });
-
-    if (blocked2 != null) {
+    if (blocked.length != 0) {
         res.status(400).send(`A block exists between the two accounts.`);
         return;
     }
@@ -658,7 +661,7 @@ export const putNewAccountSettings = async (req: Request, res: Response) => {
         else {
             console.log(`Error: ${error}`);
         }
-        res.status(400).send(`Unable to update account settings.`);
+        res.status(500).send(`Unable to update account settings.`);
     }
 }
 

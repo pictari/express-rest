@@ -1,0 +1,11 @@
+@endpoint = http://localhost:3000/verification
+@verificationAddress = INSERT-ADDRESS-FOR-VERIFICATION-HERE
+
+# NOTE: verifications are generated when an email is updated or an account is changed; there is no explicit POST/PUT route for them
+
+# sets (204) the account to whom that address belongs to have a verified status of 1 and deletes the verification entry
+# produces 404 if the address doesn't exist (anymore) or the account it's tied to is deleted in some way
+# produces 500 on backend error
+GET {{endpoint}}/{{verificationAddress}} HTTP/1.1
+content-type: application/json
+###

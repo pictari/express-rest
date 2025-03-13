@@ -1,0 +1,37 @@
+@endpoint = http://localhost:3000/rooms
+@endpointAuth = http://localhost:3000/login
+@roomId = INSERT-ROOM-ID-HERE
+@joinKey = INSERT-JOIN-KEY-HERE
+@accessToken = {{auth.response.body.accessToken}}
+
+# NOTE: this service is not responsible for creating or updating rooms
+# all routes below also return 500 in case of connectivity issues with DynamoDB
+
+# gets (200) a summarized list of public rooms selected by DynamoDB's engine, as long as they have a waiting status
+# returns 404 if there are none (this is not a fault with the client or server, it's a valid outcome in a scenario where no one has opened a public room yet)
+GET {{endpoint}} HTTP/1.1
+content-type: application/json
+###
+
+# gets (200) further room details of a single room if the ID matches (@roomId must point to an existing object in the DB)
+# returns 404 if the ID cannot be found (e.g. it got deleted in meantime)
+GET {{endpoint}}/{{roomId}} HTTP/1.1
+content-type: application/json
+###
+
+# next route is protected so must log in
+# @name auth
+GET {{endpointAuth}} HTTP/1.1
+content-type: application/json
+
+{ 
+  "email": "insert-valid-email",
+  "password": "insert-matching-password"
+}
+
+# if auth passes, gets (200) room details (including the ID) of a private room through its join key
+# returns 404 if no matching join key is found
+GET {{endpoint}}/private/{{joinKey}} HTTP/1.1
+content-type: application/json
+Authorization: Bearer {{accessToken}}
+###
