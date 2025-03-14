@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { AccountDataSource } from "../rdbms";
-import { Account, UserType } from "../models/orm/account";
+import { Account } from "../models/orm/account";
+import { UserType } from "../models/orm/common_enums";
 import { Verification } from "../models/orm/verification";
 import { Friendship } from "../models/orm/friendship";
 import { Block } from "../models/orm/block";

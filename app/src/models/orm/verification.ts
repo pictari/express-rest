@@ -14,7 +14,7 @@ export class Verification {
     })
     accountUuid!: string | null;
 
-    @OneToOne(() => Account, {cascade: true})
+    @OneToOne(() => Account, {cascade: true, onDelete: "CASCADE"})
     @JoinColumn()
     account!: Account | null;
 

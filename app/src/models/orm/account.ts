@@ -1,4 +1,5 @@
 import { Entity, Column, PrimaryColumn, Index } from "typeorm";
+import { UserType } from "./common_enums";
 
 // the properties in this entity are explicitly defined as nullable
 // (or not) in order to get a consistent result in case TypeORM
@@ -85,11 +86,3 @@ export class Account {
     totalFriends!: number | null;
 }
 
-/**
- * Enum that holds the current privilege levels we recognize, from admin (highest) to none (lowest).
- */
-export enum UserType {
-    admin,
-    moderator,
-    none
-}

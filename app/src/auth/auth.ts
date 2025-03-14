@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { verify as jwtVerify } from "jsonwebtoken";
-import { UserType } from "../models/orm/account";
+import { UserType } from "../models/orm/common_enums";
 
 /**
  * Verifies that the JWT signature is valid and then decodes it as part of res.locals.payload

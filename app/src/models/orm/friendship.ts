@@ -29,11 +29,11 @@ export class Friendship {
     account2Uuid!: string | null;
 
     // equivalent to navigation properties in EntityFramework
-    @ManyToOne(() => Account, {cascade: true})
+    @ManyToOne(() => Account, {cascade: true, onDelete: "CASCADE"})
     @JoinColumn()
     account!: Account | null;
 
-    @ManyToOne(() => Account, {cascade: true})
+    @ManyToOne(() => Account, {cascade: true, onDelete: "CASCADE"})
     @JoinColumn()
     account2!: Account | null;
 }
