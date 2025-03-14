@@ -17,7 +17,7 @@ export class BrokenTelephoneGame {
     accountUuid!: string | null;
 
     // equivalent to navigation properties in EntityFramework
-    @ManyToOne(() => Account, {cascade: true, nullable: true, orphanedRowAction: "nullify", onDelete: "SET NULL"})
+    @ManyToOne(() => Account, {nullable: true, orphanedRowAction: "nullify", onDelete: "SET NULL"})
     @JoinColumn()
     account!: Account | null;
 }

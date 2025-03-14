@@ -5,6 +5,7 @@ import roomsRouter from "./routes/rooms";
 import accountRouter from "./routes/account";
 import verificationRouter from "./routes/verification";
 import authRouter from "./routes/auth";
+import gameRouter from "./routes/game";
 import "reflect-metadata";
 const cors = require('cors');
 
@@ -24,6 +25,7 @@ app.use('/rooms', roomsRouter);
 app.use('/account', accountRouter);
 app.use('/verification', verificationRouter);
 app.use('/login', authRouter);
+app.use('/game', gameRouter);
 
 var server = app.listen(PORT, function () {
     console.log("Listening on port: " + PORT)

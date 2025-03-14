@@ -31,7 +31,7 @@ export class BrokenTelephoneEntry {
     // represents the contributor of that entry only (owner is in BrokenTelephoneGame)
     @Column({
         type: "uuid",
-        nullable: false
+        nullable: true
     })
     accountUuid!: string | null;
 
@@ -58,11 +58,11 @@ export class BrokenTelephoneEntry {
     content!: string | null;
 
     // equivalent to navigation properties in EntityFramework
-    @ManyToOne(() => Account, {cascade: true, nullable: true, orphanedRowAction: "nullify", onDelete: "SET NULL"})
+    @ManyToOne(() => Account, {nullable: true, orphanedRowAction: "nullify", onUpdate:"CASCADE", onDelete: "SET NULL"})
     @JoinColumn()
     account!: Account | null;
 
     @ManyToOne(() => BrokenTelephoneGame, {cascade: true, onDelete: "CASCADE"})
-    @JoinColumn()
+    @JoinColumn({name:'gameId', referencedColumnName: 'gameId'})
     game!: BrokenTelephoneGame | null;
 }
