@@ -20,7 +20,7 @@ export class BrokenTelephoneEntry {
     })
     stream!: number | null;
 
-    // index of 1 = person started the stream
+    // index of 0 = person started the stream
     @PrimaryColumn({
         type: "int",
         unsigned: true
@@ -43,6 +43,7 @@ export class BrokenTelephoneEntry {
     contentType!: ContentType | null;
 
     // denormalized to prevent unnecessary reads/allow for individual ratings of a deleted account to be purged for storage
+    // while the column is nullable to prevent the contribution being wiped due to possible errors, please create new entities with totalRating = 0
     @Column({
         type: "int",
         unsigned: true,

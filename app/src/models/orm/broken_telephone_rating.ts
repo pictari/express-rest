@@ -1,4 +1,4 @@
-import { Entity, PrimaryColumn, ManyToOne, JoinColumn, Unique } from "typeorm";
+import { Entity, PrimaryColumn, ManyToOne, JoinColumn, Unique, Column } from "typeorm";
 import { Account } from "./account";
 import { BrokenTelephoneEntry } from "./broken_telephone_entry";
 
@@ -31,6 +31,14 @@ export class BrokenTelephoneRating {
         nullable: false
     })
     accountUuid!: string;
+
+    // there's no rating without the rating score, so this must not be null
+    @Column({
+        type: "tinyint",
+        unsigned: true,
+        nullable: false
+    })
+    rating!: number;
 
     // equivalent to navigation properties in EntityFramework
     @ManyToOne(() => Account, {cascade: true, onDelete: "CASCADE"})
