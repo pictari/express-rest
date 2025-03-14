@@ -1,9 +1,10 @@
-import { Entity, PrimaryColumn, ManyToOne, JoinColumn } from "typeorm";
+import { Entity, PrimaryColumn, ManyToOne, JoinColumn, Unique } from "typeorm";
 import { Account } from "./account";
 import { BrokenTelephoneEntry } from "./broken_telephone_entry";
 
 @Entity()
-export class GameRating {
+@Unique("brokentel_rating_constraint", ["entryId", "entryStream", "entryIndex","accountUuid"])
+export class BrokenTelephoneRating {
     @PrimaryColumn({
         type: "int",
         unsigned: true,

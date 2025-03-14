@@ -7,7 +7,7 @@ import { PendingFriendship } from "./models/orm/pending_friendship";
 import dotenv from "dotenv";
 import { BrokenTelephoneEntry } from "./models/orm/broken_telephone_entry";
 import { BrokenTelephoneGame } from "./models/orm/broken_telephone_game";
-import { GameRating } from "./models/orm/game_rating";
+import { BrokenTelephoneRating } from "./models/orm/broken_telephone_rating";
 
 dotenv.config();
 
@@ -21,7 +21,7 @@ export const AccountDataSource = new DataSource({
     username: process.env.DBUSERNAME,
     password: process.env.DBPASSWORD,
     database: process.env.DB,
-    entities: [Account, Verification, Friendship, Block, PendingFriendship, BrokenTelephoneGame, BrokenTelephoneEntry, GameRating],
+    entities: [Account, Verification, Friendship, Block, PendingFriendship, BrokenTelephoneGame, BrokenTelephoneEntry, BrokenTelephoneRating],
     synchronize: true,
     logging: false, 
 });
