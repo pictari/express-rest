@@ -128,9 +128,7 @@ export const getRecentAccountEntries = async (req: Request, res: Response) => {
 
     let data = await brokentelEntryRepo
     .createQueryBuilder()
-    .select('gameId')
-    .distinct(true)
-    .addSelect('content')
+    .select()
     .where("accountUuid = :id", { id: uuid})
     .limit(10)
     .getMany();
