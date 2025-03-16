@@ -225,8 +225,14 @@ export const postNewRating = async (req: Request, res: Response) => {
         let newRating : BrokenTelephoneRating = new BrokenTelephoneRating();
         newRating.accountUuid = uuid;
         newRating.rating = body.rating;
-        newRating.entry = entryExists;
+        newRating.entryId = entryExists.gameId;
+        if(entryExists.stream == null || entryExists.index == null) {
+            res.status(500).send(`Data for that entry is malformed. No ratings will be made for it until it is fixed.`);
+            return;
+        }
 
+        newRating.entryStream = entryExists.stream;
+        newRating.entryIndex = entryExists.index;
         entryExists.totalRating += body.rating;
 
         AccountDataSource.manager.save(newRating);

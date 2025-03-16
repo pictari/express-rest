@@ -1,0 +1,20 @@
+@endpoint = http://localhost:3000/game
+@endpointAuth = http://localhost:3000/login
+@accessToken = {{auth.response.body.accessToken}}
+
+# @name auth
+POST {{endpointAuth}} HTTP/1.1
+content-type: application/json
+
+{ 
+  "email": "guyguyguyguy@email.com",
+  "password": "123"
+}
+###
+POST {{endpoint}}/rate/3/1/1 HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+    "rating": 1
+}
