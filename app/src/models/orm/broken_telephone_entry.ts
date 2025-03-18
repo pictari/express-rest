@@ -1,10 +1,11 @@
-import { Entity, Column, PrimaryColumn, ManyToOne, JoinColumn, Unique } from "typeorm";
+import { Entity, Column, PrimaryColumn, ManyToOne, JoinColumn, Unique, Index } from "typeorm";
 import { Account } from "./account";
 import { BrokenTelephoneGame } from "./broken_telephone_game";
 import { ContentType } from "./common_enums";
 
 @Entity()
 @Unique("brokentel_entry_constraint", ["gameId", "stream", "index"])
+@Index("brokentel_entry_uuid", ["accountUuid"])
 export class BrokenTelephoneEntry {
     @PrimaryColumn({
         type: "int",

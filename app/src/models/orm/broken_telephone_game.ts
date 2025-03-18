@@ -1,7 +1,8 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from "typeorm";
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, Index } from "typeorm";
 import { Account } from "./account";
 
 @Entity()
+@Index("brokentel_game_uuid", ["accountUuid"])
 export class BrokenTelephoneGame {
     @PrimaryGeneratedColumn({
         type: "int",
