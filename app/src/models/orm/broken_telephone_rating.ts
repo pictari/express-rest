@@ -1,4 +1,4 @@
-import { Entity, PrimaryColumn, ManyToOne, JoinColumn, Unique, Column, Index } from "typeorm";
+import { Entity, PrimaryColumn, ManyToOne, JoinColumn, Unique, Column } from "typeorm";
 import { Account } from "./account";
 import { BrokenTelephoneEntry } from "./broken_telephone_entry";
 
