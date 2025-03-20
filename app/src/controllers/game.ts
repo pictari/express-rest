@@ -119,19 +119,30 @@ export const getGameDetails = async (req: Request, res: Response) => {
 }
 
 /**
- * Gets a given account's latest 10 games. These games all have different IDs; it doesn't count multiple entries within a single game.
+ * Gets a given account's latest 10 games.
  * @param req All contents of a HTTP request.
  * @param res The response to build/send to the end user.
  */
 export const getRecentAccountEntries = async (req: Request, res: Response) => {
     let uuid = req.params.uuid;
 
-    let data = await brokentelEntryRepo
-    .createQueryBuilder()
-    .select()
-    .where("accountUuid = :id", { id: uuid})
-    .limit(10)
-    .getMany();
+    let data = await brokentelEntryRepo.find({
+        take: 10,
+        where: {
+            accountUuid: uuid
+        },
+        order: {
+            gameId: {
+                direction: "DESC"
+            }
+        }
+    });
+    // .createQueryBuilder()
+    // .select()
+    // .where("accountUuid = :id", { id: uuid})
+    // .limit(10)
+    // .orderBy()
+    // .getMany();
 
     if(data.length == 0) {
         res.status(404).send(`Cannot find any finished drawings for that account.`);
